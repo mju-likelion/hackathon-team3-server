@@ -9,7 +9,7 @@ export const generateTypeOrmConfig: GenerateTypeOrmConfig = (env) => ({
   username: env.DATABASE_USERNAME,
   password: env.DATABASE_PASSWORD,
   database: env.DATABASE_NAME,
-  synchronize: true, // env.NODE_ENV === 'prod',
+  synchronize: false,
   logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
 });
