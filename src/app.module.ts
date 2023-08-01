@@ -7,6 +7,7 @@ import { generateTypeOrmConfig } from './config/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { validationSchema } from './config/validationSchema';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -25,6 +26,8 @@ import { validationSchema } from './config/validationSchema';
     ProblemsModule,
     ChaptersModule,
     LearningsModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
