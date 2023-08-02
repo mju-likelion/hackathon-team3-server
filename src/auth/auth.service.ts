@@ -36,31 +36,27 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto, response: Response) {
-    try {
-      const userData = await this.usersRepository.findOne({
-        where: { email: loginDto.email },
-        select: { password: true },
-      });
-      if (!userData || !(await userData.checkPassword(loginDto.password))) {
-        throw !userData
-          ? new NotFoundException('존재하지 않는 사용자입니다.')
-          : new UnauthorizedException('비밀번호가 일치하지 않습니다.');
-      }
-
-      const sign = jwt.sign({ id: userData.id }, this.config.JWT_SECRET, {
-        expiresIn: '1d',
-        audience: 'example.com',
-        issuer: 'example.com',
-      });
-      response.cookie('jwt', sign, {
-        httpOnly: true,
-      });
-      return response.json({
-        message: 'login',
-      });
-    } catch (e) {
-      console.log(e);
+    const userData = await this.usersRepository.findOne({
+      where: { email: loginDto.email },
+      select: { password: true },
+    });
+    if (!userData || !(await userData.checkPassword(loginDto.password))) {
+      throw !userData
+        ? new NotFoundException('존재하지 않는 사용자입니다.')
+        : new UnauthorizedException('비밀번호가 일치하지 않습니다.');
     }
+
+    const sign = jwt.sign({ id: userData.id }, this.config.JWT_SECRET, {
+      expiresIn: '1d',
+      audience: 'example.com',
+      issuer: 'example.com',
+    });
+    response.cookie('jwt', sign, {
+      httpOnly: true,
+    });
+    return response.json({
+      message: 'login',
+    });
   }
 
   isValidateJwtToken(userId: string, jwtString: string) {
