@@ -6,11 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JoinDto } from './dto/Join.dto';
+import { JoinDto } from './dto/join.dto';
 import authConfig from '../config/authConfig';
 import { ConfigType } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
-import { LoginDto } from './dto/Login.dto';
+import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 
 @Injectable()
