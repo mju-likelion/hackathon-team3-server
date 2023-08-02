@@ -39,6 +39,7 @@ export class AuthService {
     try {
       const userData = await this.usersRepository.findOne({
         where: { email: loginDto.email },
+        select: { password: true },
       });
       if (!userData || !(await userData.checkPassword(loginDto.password))) {
         throw !userData
