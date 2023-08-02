@@ -26,7 +26,6 @@ import { AuthModule } from './auth/auth.module';
     ProblemsModule,
     ChaptersModule,
     LearningsModule,
-    UsersModule,
     AuthModule,
   ],
   controllers: [],

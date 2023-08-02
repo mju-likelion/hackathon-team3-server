@@ -5,27 +5,40 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
 import { JoinDto } from './dto/join.dto';
 import authConfig from '../config/authConfig';
 import { ConfigType } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../users/entities/users.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
     @Inject(authConfig.KEY) private config: ConfigType<typeof authConfig>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
   ) {}
 
   async join(joinDto: JoinDto) {
-    return this.usersService.create(joinDto);
+    if (
+      await this.usersRepository.findOne({
+        where: { email: joinDto.email },
+      })
+    ) {
+      throw new ConflictException('이미 존재하는 사용자 입니다.');
+    }
+    const newUser = this.usersRepository.create(joinDto);
+    return await this.usersRepository.save(newUser);
   }
 
   async login(loginDto: LoginDto, response: Response) {
-    const userData = await this.usersService.findOne(loginDto.email);
+    const userData = await this.usersRepository.findOne({
+      where: { email: loginDto.email },
+    });
     if (!userData || (await userData.checkPassword(loginDto.password))) {
       throw !userData
         ? new UnauthorizedException('비밀번호가 일치하지 않습니다.')
