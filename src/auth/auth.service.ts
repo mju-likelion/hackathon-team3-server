@@ -1,24 +1,27 @@
 import {
   ConflictException,
-  Inject,
+  // Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JoinDto } from './dto/join.dto';
-import authConfig from '../config/authConfig';
-import { ConfigType } from '@nestjs/config';
-import * as jwt from 'jsonwebtoken';
+// import authConfig from '../config/authConfig';
+// import { ConfigType } from '@nestjs/config';
+// import * as jwt from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/users.entity';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import { ONEDAY, Payload } from './jwt/jwt.payload';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(authConfig.KEY) private config: ConfigType<typeof authConfig>,
+    private readonly jwtService: JwtService,
+    // @Inject(authConfig.KEY) private config: ConfigType<typeof authConfig>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
@@ -46,11 +49,18 @@ export class AuthService {
         : new UnauthorizedException('비밀번호가 일치하지 않습니다.');
     }
 
-    const sign = jwt.sign({ id: userData.id }, this.config.JWT_SECRET, {
-      expiresIn: '1d',
-      audience: 'example.com',
-      issuer: 'example.com',
-    });
+    const payload: Payload = {
+      sub: userData.id,
+      email: userData.email,
+      period: ONEDAY,
+    };
+
+    const sign = this.jwtService.sign(payload);
+    // jwt.sign({ id: userData.id }, this.config.JWT_SECRET, {
+    //   expiresIn: '1d',
+    //   audience: 'example.com',
+    //   issuer: 'example.com',
+    // });
     response.cookie('jwt', sign, {
       httpOnly: true,
     });
@@ -59,15 +69,16 @@ export class AuthService {
     });
   }
 
-  isValidateJwtToken(userId: string, jwtString: string) {
-    try {
-      const payload = jwt.verify(jwtString, this.config.JWT_SECRET) as (
-        | jwt.JwtPayload
-        | string
-      ) & { id: string };
-      return userId === payload.id;
-    } catch (e) {
-      throw new ConflictException(e.message);
-    }
-  }
+  // isValidateJwtToken(userId: string, jwtString: string) {
+  //   try {
+  //     const payload = this.jwtService.verify(jwtString);
+  //     // jwt.verify(jwtString, this.config.JWT_SECRET) as (
+  //     //   | jwt.JwtPayload
+  //     //   | string
+  //     // ) & { id: string };
+  //     return userId === payload.sub;
+  //   } catch (e) {
+  //     throw new ConflictException(e.message);
+  //   }
+  // }
 }
