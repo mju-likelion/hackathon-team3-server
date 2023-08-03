@@ -1,27 +1,22 @@
 import {
   ConflictException,
-  // Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JoinDto } from './dto/join.dto';
-// import authConfig from '../config/authConfig';
-// import { ConfigType } from '@nestjs/config';
-// import * as jwt from 'jsonwebtoken';
-import { LoginDto } from './dto/login.dto';
-import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../users/entities/users.entity';
-import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/users.entity';
 import { ONEDAY, Payload } from './jwt/jwt.payload';
+import { JoinDto } from './dto/join.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    // @Inject(authConfig.KEY) private config: ConfigType<typeof authConfig>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
@@ -56,11 +51,6 @@ export class AuthService {
     };
 
     const sign = this.jwtService.sign(payload);
-    // jwt.sign({ id: userData.id }, this.config.JWT_SECRET, {
-    //   expiresIn: '1d',
-    //   audience: 'example.com',
-    //   issuer: 'example.com',
-    // });
     response.cookie('jwt', sign, {
       httpOnly: true,
     });
@@ -68,17 +58,4 @@ export class AuthService {
       message: 'login',
     });
   }
-
-  // isValidateJwtToken(userId: string, jwtString: string) {
-  //   try {
-  //     const payload = this.jwtService.verify(jwtString);
-  //     // jwt.verify(jwtString, this.config.JWT_SECRET) as (
-  //     //   | jwt.JwtPayload
-  //     //   | string
-  //     // ) & { id: string };
-  //     return userId === payload.sub;
-  //   } catch (e) {
-  //     throw new ConflictException(e.message);
-  //   }
-  // }
 }
