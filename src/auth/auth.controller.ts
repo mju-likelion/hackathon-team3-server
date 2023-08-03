@@ -9,12 +9,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/join')
-  join(@Body() joinDto: JoinDto) {
+  async join(@Body() joinDto: JoinDto) {
     return this.authService.join(joinDto);
   }
 
   @Post('/login')
-  login(@Body() loginDto: LoginDto, @Res() response: Response) {
+  async login(@Body() loginDto: LoginDto, @Res() response: Response) {
     return this.authService.login(loginDto, response);
   }
 }
