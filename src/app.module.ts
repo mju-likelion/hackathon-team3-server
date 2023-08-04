@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { validationSchema } from './config/validationSchema';
 import { AuthModule } from './auth/auth.module';
+import { OpenaiModule } from './apis/openai/openai.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     ChaptersModule,
     LearningsModule,
     AuthModule,
+    OpenaiModule,
   ],
   controllers: [],
   providers: [],
