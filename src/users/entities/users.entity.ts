@@ -15,7 +15,7 @@ import { Chapter } from 'src/chapters/entities/chapter.entity';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id!: number;
+  id!: string;
 
   @Column()
   @IsString()

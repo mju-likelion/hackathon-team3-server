@@ -5,7 +5,7 @@ import { Chapter } from 'src/chapters/entities/chapter.entity';
 @Entity()
 export class Learning {
   @PrimaryGeneratedColumn('uuid')
-  id!: number;
+  id!: string;
 
   /**
    * @description
