@@ -12,7 +12,7 @@ import { Learning } from 'src/learnings/entities/learning.entity';
 @Entity()
 export class Chapter {
   @PrimaryGeneratedColumn('uuid')
-  id!: number;
+  id!: string;
 
   @Column()
   @IsString()

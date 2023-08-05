@@ -17,7 +17,7 @@ export enum QuestionType {
 @Entity()
 export class Problem {
   @PrimaryGeneratedColumn('uuid')
-  id!: number;
+  id!: string;
 
   /**
    * @description
