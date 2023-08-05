@@ -12,6 +12,8 @@ import { User } from '../users/entities/users.entity';
 import { ONEDAY, Payload } from './jwt/jwt.payload';
 import { JoinDto } from './dtos/join.dto';
 import { LoginDto } from './dtos/login.dto';
+import { PostJoinRes } from './dtos/join-response.dto';
+import { PostLoginRes } from './dtos/login-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +23,7 @@ export class AuthService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async join(joinDto: JoinDto) {
+  async join(joinDto: JoinDto): Promise<PostJoinRes> {
     if (
       await this.usersRepository.findOne({
         where: { email: joinDto.email },
@@ -29,8 +31,11 @@ export class AuthService {
     ) {
       throw new ConflictException('이미 존재하는 사용자 입니다.');
     }
-    const newUser = this.usersRepository.create(joinDto);
-    return await this.usersRepository.save(newUser);
+    await this.usersRepository.save(this.usersRepository.create(joinDto));
+    const postJoinRes: PostJoinRes = new PostJoinRes();
+    postJoinRes.statusCode = 200;
+    postJoinRes.message = 'join success';
+    return postJoinRes;
   }
 
   async login(loginDto: LoginDto, response: Response) {
@@ -54,8 +59,10 @@ export class AuthService {
     response.cookie('jwt', sign, {
       httpOnly: true,
     });
-    return response.json({
-      message: 'login',
-    });
+    const postLoginRes: PostLoginRes = new PostLoginRes();
+    postLoginRes.statusCode = 200;
+    postLoginRes.message = 'login success';
+
+    return response.json(postLoginRes);
   }
 }
