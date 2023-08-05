@@ -65,6 +65,9 @@ export class LearningsService {
     try {
       const userInDb = await this.usersRepository.findOne({
         where: { id: user.id },
+        relations: {
+          completed_chapters: true,
+        },
       });
       if (!userInDb) {
         throw new NotFoundException('User not found');
@@ -81,6 +84,14 @@ export class LearningsService {
       if (!learning) throw new NotFoundException('Learning not found ');
       if (learning.chapters.length === 0)
         throw new NotFoundException('Chapters not found within the learning');
+
+      // 해당 챕터 완료 여부 추가
+      learning.chapters.forEach((chapter) => {
+        const isCompleted = userInDb.completed_chapters.some(
+          (completedChapter) => completedChapter.id === chapter.id,
+        );
+        chapter['isCompleted'] = isCompleted;
+      });
 
       return {
         statusCode: 200,
