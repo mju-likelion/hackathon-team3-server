@@ -21,9 +21,10 @@ export class OpenaiService {
     const openAiChatCompletionRequestBuilder: OpenAiChatCompletionRequestBuilder =
       new OpenAiChatCompletionRequestBuilder();
     openAiChatCompletionRequestBuilder.setUserRole(
-      'score this problem(0~10)\n' +
+      'Score how similar two sentences are(0~10)\n' +
+        '1: ' +
         requestDto.problem +
-        '\n answer: ' +
+        '\n 2: ' +
         requestDto.answer,
     );
     openAiChatCompletionRequestBuilder.setSystemRole(
