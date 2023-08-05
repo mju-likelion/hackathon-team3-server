@@ -10,8 +10,8 @@ import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/users.entity';
 import { ONEDAY, Payload } from './jwt/jwt.payload';
-import { JoinDto } from './dto/join.dto';
-import { LoginDto } from './dto/login.dto';
+import { JoinDto } from './dtos/join.dto';
+import { LoginDto } from './dtos/login.dto';
 
 @Injectable()
 export class AuthService {
