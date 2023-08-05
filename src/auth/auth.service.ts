@@ -33,7 +33,7 @@ export class AuthService {
     }
     await this.usersRepository.save(this.usersRepository.create(joinDto));
     const postJoinRes: PostJoinRes = new PostJoinRes();
-    postJoinRes.statusCode = 200;
+    postJoinRes.statusCode = 201;
     postJoinRes.message = 'join success';
     return postJoinRes;
   }
