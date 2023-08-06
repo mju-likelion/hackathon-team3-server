@@ -3,7 +3,10 @@ import { Configuration, OpenAIApi } from 'openai';
 import { ConfigType } from '@nestjs/config';
 import openaiConfig from './config/openaiConfig';
 import { OpenAiChatCompletionRequestBuilder } from './request/chatCompletionRequest';
-import { RequestDto } from './requestdto/request.dto';
+import { ScoreProblemDto } from './dtos/score-problem.dto';
+import { OptimizeStringDto } from './dtos/optimize-string.dto';
+import { ScoreProblemResponseDto } from './dtos/score-problem-response.dto';
+import { OptimizeStringResponseDto } from './dtos/optimize-string-response.dto';
 
 @Injectable()
 export class OpenaiService {
@@ -17,26 +20,60 @@ export class OpenaiService {
       apiKey: this.config.apiKey,
     }),
   );
-  async scoreProblem(requestDto: RequestDto) {
+  async scoreProblem(scoreProblemDto: ScoreProblemDto) {
+    const openAiChatCompletionRequestBuilder: OpenAiChatCompletionRequestBuilder =
+      new OpenAiChatCompletionRequestBuilder();
+
+    openAiChatCompletionRequestBuilder.setUserRole(
+      'Please rate the similarity between the two sentences(0 to 100) strictly\n' +
+        'sentence A: ' +
+        scoreProblemDto.originAnswer +
+        '\nsentence B: ' +
+        scoreProblemDto.submittedAnswer,
+    );
+    openAiChatCompletionRequestBuilder.setSystemRole(
+      'Score 5 times and return the average value only(number)\n',
+    );
+    if (scoreProblemDto.temperature) {
+      openAiChatCompletionRequestBuilder.setTemperature(
+        scoreProblemDto.temperature,
+      );
+    }
+
+    const scoreProblemResponseDto: ScoreProblemResponseDto =
+      new ScoreProblemResponseDto();
+    const response = await this.openai.createChatCompletion(
+      openAiChatCompletionRequestBuilder.build(),
+    );
+    scoreProblemResponseDto.score = +response.data.choices[0].message.content;
+    return scoreProblemResponseDto;
+  }
+
+  async optimizeStringSpaces(optimizeStringDto: OptimizeStringDto) {
     const openAiChatCompletionRequestBuilder: OpenAiChatCompletionRequestBuilder =
       new OpenAiChatCompletionRequestBuilder();
     openAiChatCompletionRequestBuilder.setUserRole(
-      'Score how similar two sentences are(0~10)\n' +
-        '1: ' +
-        requestDto.problem +
-        '\n 2: ' +
-        requestDto.answer,
+      'Correct the spaces in this sentence\n' +
+        'sentence: ' +
+        optimizeStringDto.requestedString,
     );
     openAiChatCompletionRequestBuilder.setSystemRole(
-      'you have to response only score of answer',
+      'You have to response only result sentence\n',
     );
-    if (requestDto.temperature) {
-      openAiChatCompletionRequestBuilder.setTemperature(requestDto.temperature);
+    if (optimizeStringDto.temperature) {
+      openAiChatCompletionRequestBuilder.setTemperature(
+        optimizeStringDto.temperature,
+      );
     }
+
     const response = await this.openai.createChatCompletion(
       openAiChatCompletionRequestBuilder.build(),
     );
 
-    return response.data.choices[0].message.content;
+    const optimizeStringResponseDto: OptimizeStringResponseDto =
+      new OptimizeStringResponseDto();
+    optimizeStringResponseDto.optimizedString =
+      response.data.choices[0].message.content;
+    return optimizeStringResponseDto;
   }
 }
