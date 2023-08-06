@@ -1,10 +1,10 @@
 import { IsNumber, IsString, Min } from 'class-validator';
-export class RequestDto {
+export class ScoreProblemDto {
   @IsString()
-  problem!: string;
+  originAnswer!: string;
 
   @IsString()
-  answer!: string;
+  submittedAnswer!: string;
 
   @IsNumber()
   @Min(0, { message: 'Temperature must be greater than or equal to 0' })
