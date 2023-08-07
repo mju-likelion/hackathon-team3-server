@@ -72,4 +72,18 @@ export class Problem {
   })
   @IsString()
   answer!: string;
+
+  /**
+   * @description
+   * 객관식 보기(문자열로 주어짐)
+   *
+   * @example
+   * 객관식 보기가 "검은색", "빨간색", "초록색" 이라면
+   * answerOptions "검은색,빨간색,초록색" <- ',' 를 기준으로 split 하여 사용
+   */
+  @Column({
+    nullable: true,
+  })
+  @IsString()
+  answerOptions?: string | null;
 }
