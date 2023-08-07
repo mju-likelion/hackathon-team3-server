@@ -36,7 +36,6 @@ export const parseProblem = (
     content = tmp[0];
     const choices = tmp[1].split(',');
 
-    console.log(choices);
     return {
       content,
       choices,
