@@ -29,6 +29,10 @@ export class Problem {
   @IsEnum(QuestionType)
   type!: QuestionType;
 
+  @Column()
+  @IsString()
+  scenario!: string;
+
   /**
    * @description
    * 문제의 내용 - 문제와 문제에 필요한 정보를 담고 있음
