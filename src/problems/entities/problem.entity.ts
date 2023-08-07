@@ -19,14 +19,6 @@ export class Problem {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  /**
-   * @description
-   * 예시 문제인지 아닌지 구분
-   */
-  @Column()
-  @IsBoolean()
-  is_example!: boolean;
-
   @ManyToOne((type) => Chapter, (chapter) => chapter.problems, {
     nullable: true,
     onDelete: 'SET NULL',
