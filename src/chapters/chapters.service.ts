@@ -45,13 +45,12 @@ export class ChaptersService {
       // chapter.problems = ???
 
       chapter['problemList'] = chapter.problems.map((problem) => {
-        const { id, type, scenario, content, answer, answerOptions } = problem;
+        const { id, type, scenario, content, answerOptions } = problem;
         return {
           id,
           type,
           scenario,
           question: content,
-          answer,
           answerOptions:
             type == QuestionType.MCQ ? answerOptions.split(',') : undefined,
         };
