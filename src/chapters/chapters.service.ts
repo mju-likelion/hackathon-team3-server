@@ -20,7 +20,7 @@ export class ChaptersService {
       const userInDb = await this.usersRepository.findOne({
         where: { id: user.id },
         relations: {
-          completed_chapters: {
+          completedChapters: {
             learning: true,
           },
         },
