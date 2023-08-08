@@ -35,7 +35,7 @@ export class User {
 
   @ManyToMany(() => Chapter)
   @JoinTable()
-  completed_chapters?: Chapter[];
+  completedChapters?: Chapter[];
 
   @BeforeInsert()
   @BeforeUpdate()
