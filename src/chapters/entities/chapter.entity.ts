@@ -29,6 +29,7 @@ export class Chapter {
 
   @ManyToOne((type) => Learning, (learning) => learning.chapters, {
     nullable: true,
+    onDelete: 'SET NULL',
   })
   learning?: Learning;
 }
