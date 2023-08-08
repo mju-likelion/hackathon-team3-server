@@ -21,7 +21,6 @@ export class Problem {
 
   @ManyToOne((type) => Chapter, (chapter) => chapter.problems, {
     nullable: true,
-    onDelete: 'SET NULL',
   })
   chapter?: Chapter;
 

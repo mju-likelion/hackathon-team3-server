@@ -24,13 +24,11 @@ export class Chapter {
 
   @OneToMany((type) => Problem, (problem) => problem.chapter, {
     nullable: true,
-    onDelete: 'CASCADE',
   })
   problems?: Problem[];
 
   @ManyToOne((type) => Learning, (learning) => learning.chapters, {
     nullable: true,
-    onDelete: 'SET NULL',
   })
   learning?: Learning;
 }

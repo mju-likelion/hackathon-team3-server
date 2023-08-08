@@ -18,7 +18,6 @@ export class Learning {
 
   @OneToMany((type) => Chapter, (chapter) => chapter.learning, {
     nullable: true,
-    onDelete: 'CASCADE',
   })
   chapters?: Chapter[];
 }
