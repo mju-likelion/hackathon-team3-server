@@ -5,6 +5,14 @@ import { GetChapterRes } from './dtos/chapter.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Chapter } from './entities/chapter.entity';
 import { QuestionType } from '../problems/entities/problem.entity';
+import { CreateDto } from './dtos/crud/create/create.dto';
+import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
+import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
+import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
+import { UpdateDto } from './dtos/crud/update/update.dto';
+import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
+import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
+import { Learning } from '../learnings/entities/learning.entity';
 
 @Injectable()
 export class ChaptersService {
@@ -13,6 +21,8 @@ export class ChaptersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Chapter)
     private chaptersRepository: Repository<Chapter>,
+    @InjectRepository(Learning)
+    private learningsRepository: Repository<Learning>,
   ) {}
 
   async getChapter(user: User, chapterId: string): Promise<GetChapterRes> {
@@ -67,5 +77,106 @@ export class ChaptersService {
     } catch (e) {
       throw e;
     }
+  }
+  async create(createDto: CreateDto): Promise<CreateResponseDto> {
+    const newChapter = this.chaptersRepository.create(createDto);
+    if (createDto.learningId) {
+      const learningIdDb = await this.learningsRepository.findOne({
+        where: { id: createDto.learningId },
+      });
+      if (!learningIdDb) {
+        throw new NotFoundException('Learning dose not exist');
+      }
+      newChapter.learning = learningIdDb;
+    }
+    await this.chaptersRepository.save(newChapter);
+
+    const createResponseDto: CreateResponseDto = new CreateResponseDto();
+    createResponseDto.statusCode = 201;
+    createResponseDto.message = 'Chapter successfully created';
+    createResponseDto.generatedChapterId = newChapter.id;
+    return createResponseDto;
+  }
+
+  async findOne(id: string): Promise<FindOneResponseDto> {
+    const chapterInDb = await this.chaptersRepository.findOne({
+      where: { id: id },
+      relations: {
+        learning: true,
+        problems: true,
+      },
+    });
+    if (!chapterInDb) {
+      throw new NotFoundException('Chapter dose not exist');
+    }
+    const findOneResponseDto: FindOneResponseDto = new FindOneResponseDto();
+    findOneResponseDto.statusCode = 200;
+    findOneResponseDto.message = 'Chapter successfully found';
+    findOneResponseDto.foundChapter = chapterInDb;
+    return findOneResponseDto;
+  }
+
+  async findAll(): Promise<FindAllResponseDto> {
+    const chaptersInDb = await this.chaptersRepository.find({
+      relations: {
+        learning: true,
+        problems: true,
+      },
+    });
+    if (!chaptersInDb) {
+      throw new NotFoundException('Chapters dose not exist');
+    }
+
+    const findAllResponseDto: FindAllResponseDto = new FindAllResponseDto();
+    findAllResponseDto.statusCode = 200;
+    findAllResponseDto.message = 'Chapters successfully found';
+    findAllResponseDto.foundedChapters = chaptersInDb;
+    return findAllResponseDto;
+  }
+
+  async updateOne(
+    id: string,
+    updateDto: UpdateDto,
+  ): Promise<UpdateResponseDto> {
+    const chapterInDb = await this.chaptersRepository.findOne({
+      where: { id: id },
+    });
+    if (!chapterInDb) {
+      throw new NotFoundException('Chapter dose not exist');
+    }
+    if (updateDto.learningId) {
+      const learningIdDb = await this.learningsRepository.findOne({
+        where: { id: updateDto.learningId },
+      });
+      if (!learningIdDb) {
+        throw new NotFoundException('Learning dose not exist');
+      }
+      chapterInDb.learning = learningIdDb;
+    }
+
+    chapterInDb.title = updateDto.title ? updateDto.title : chapterInDb.title;
+    chapterInDb.helpMessage = updateDto.helpMessage
+      ? updateDto.helpMessage
+      : chapterInDb.helpMessage;
+    await this.chaptersRepository.update(chapterInDb.id, chapterInDb);
+
+    const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
+    updateResponseDto.statusCode = 200;
+    updateResponseDto.message = 'Chapter successfully updated';
+    return updateResponseDto;
+  }
+  async deleteOne(id: string): Promise<DeleteResponseDto> {
+    const chapterInDb = await this.chaptersRepository.findOne({
+      where: { id: id },
+    });
+    if (!chapterInDb) {
+      throw new NotFoundException('Chapter dose not exist');
+    }
+    await this.chaptersRepository.delete(id);
+    const deleteResponseDto: DeleteResponseDto = new DeleteResponseDto();
+    deleteResponseDto.statusCode = 200;
+    deleteResponseDto.message = 'Chapter successfully deleted';
+
+    return deleteResponseDto;
   }
 }
