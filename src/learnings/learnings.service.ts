@@ -20,7 +20,7 @@ export class LearningsService {
       const userInDb = await this.usersRepository.findOne({
         where: { id: user.id },
         relations: {
-          completed_chapters: {
+          completedChapters: {
             learning: true,
           },
         },
@@ -46,7 +46,7 @@ export class LearningsService {
       const totalChaptersCount = learning.chapters.length;
 
       // 해당 타입 내 완료한 챕터 수
-      const completedChaptersCount = userInDb.completed_chapters.filter(
+      const completedChaptersCount = userInDb.completedChapters.filter(
         (chapter) => chapter.learning.type === +type,
       ).length;
 
@@ -66,7 +66,7 @@ export class LearningsService {
       const userInDb = await this.usersRepository.findOne({
         where: { id: user.id },
         relations: {
-          completed_chapters: true,
+          completedChapters: true,
         },
       });
       if (!userInDb) {
@@ -87,7 +87,7 @@ export class LearningsService {
 
       // 해당 챕터 완료 여부 추가
       learning.chapters.forEach((chapter) => {
-        const isCompleted = userInDb.completed_chapters.some(
+        const isCompleted = userInDb.completedChapters.some(
           (completedChapter) => completedChapter.id === chapter.id,
         );
         chapter['isCompleted'] = isCompleted;

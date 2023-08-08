@@ -20,7 +20,7 @@ export class Chapter {
 
   @Column({ nullable: true })
   @IsString()
-  help_message?: string;
+  helpMessage?: string;
 
   @OneToMany((type) => Problem, (problem) => problem.chapter, {
     nullable: true,
