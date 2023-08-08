@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -12,12 +13,22 @@ import { OpenaiService } from '../apis/openai/openai.service';
 import { SubmitResponseDto } from './dtos/submit-response.dto';
 import { ScoreProblemResponseDto } from '../apis/openai/dtos/score-problem-response.dto';
 import { OptimizeStringResponseDto } from '../apis/openai/dtos/optimize-string-response.dto';
+import { CreateDto } from './dtos/crud/create/create.dto';
+import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
+import { Chapter } from '../chapters/entities/chapter.entity';
+import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
+import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
+import { UpdateDto } from './dtos/crud/update/update.dto';
+import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
+import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
 
 @Injectable()
 export class ProblemsService {
   constructor(
     @InjectRepository(Problem)
     private problemsRepository: Repository<Problem>,
+    @InjectRepository(Chapter)
+    private chaptersRepository: Repository<Chapter>,
     private readonly openaiService: OpenaiService,
   ) {}
 
@@ -91,5 +102,121 @@ export class ProblemsService {
       }
     }
     return isValuableAnswer;
+  }
+
+  async create(createDto: CreateDto): Promise<CreateResponseDto> {
+    const newProblem = this.problemsRepository.create(createDto);
+    console.log(createDto);
+    if (createDto.chapterId) {
+      const chapterInDb = await this.chaptersRepository.findOne({
+        where: { id: createDto.chapterId },
+      });
+      if (!chapterInDb) {
+        throw new NotFoundException('Problem dose not exist');
+      }
+      newProblem.chapter = chapterInDb;
+    }
+    await this.problemsRepository.save(newProblem);
+
+    const createResponseDto: CreateResponseDto = new CreateResponseDto();
+    createResponseDto.statusCode = 201;
+    createResponseDto.message = 'Problem successfully created';
+    createResponseDto.generatedProblemId = newProblem.id;
+    return createResponseDto;
+  }
+
+  async findOne(id: string): Promise<FindOneResponseDto> {
+    const problemIdDb = await this.problemsRepository.findOne({
+      where: { id: id },
+      relations: {
+        chapter: true,
+      },
+    });
+    if (!problemIdDb) {
+      throw new NotFoundException('Problem dose not exist');
+    }
+    const findOneResponseDto: FindOneResponseDto = new FindOneResponseDto();
+    findOneResponseDto.statusCode = 200;
+    findOneResponseDto.message = 'Problem successfully found';
+    findOneResponseDto.foundProblem = problemIdDb;
+    return findOneResponseDto;
+  }
+
+  async findAll(): Promise<FindAllResponseDto> {
+    const problemsIdDb = await this.problemsRepository.find({
+      relations: {
+        chapter: true,
+      },
+    });
+    if (!problemsIdDb) {
+      throw new NotFoundException('Problems dose not exist');
+    }
+
+    const findAllResponseDto: FindAllResponseDto = new FindAllResponseDto();
+    findAllResponseDto.statusCode = 200;
+    findAllResponseDto.message = 'Problems successfully found';
+    findAllResponseDto.foundedProblems = problemsIdDb;
+    return findAllResponseDto;
+  }
+
+  async updateOne(
+    id: string,
+    updateDto: UpdateDto,
+  ): Promise<UpdateResponseDto> {
+    if (updateDto.type != QuestionType.MCQ && updateDto.answerOptions) {
+      throw new BadRequestException(
+        "Only MCQ can have property 'answerOptions'",
+      );
+    }
+    const problemInDb = await this.problemsRepository.findOne({
+      where: { id: id },
+    });
+    if (!problemInDb) {
+      throw new NotFoundException('Problem dose not exist');
+    }
+    if (updateDto.chapterId) {
+      const chapterInDb = await this.chaptersRepository.findOne({
+        where: { id: updateDto.chapterId },
+      });
+      if (!chapterInDb) {
+        throw new NotFoundException('Chapter dose not exist');
+      }
+      problemInDb.chapter = chapterInDb;
+    }
+    problemInDb.type = updateDto.type ? updateDto.type : problemInDb.type;
+    problemInDb.scenario = updateDto.scenario
+      ? updateDto.scenario
+      : problemInDb.scenario;
+    problemInDb.content = updateDto.content
+      ? updateDto.content
+      : problemInDb.content;
+    problemInDb.answer = updateDto.answer
+      ? updateDto.answer
+      : problemInDb.answer;
+    problemInDb.answerOptions = updateDto.answerOptions
+      ? updateDto.answerOptions
+      : problemInDb.answerOptions;
+
+    await this.problemsRepository.update(problemInDb.id, problemInDb);
+
+    const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
+    updateResponseDto.statusCode = 200;
+    updateResponseDto.message = 'Problem successfully updated';
+    return updateResponseDto;
+  }
+
+  async deleteOne(id: string): Promise<DeleteResponseDto> {
+    const problemInDb = await this.problemsRepository.findOne({
+      where: { id: id },
+    });
+    if (!problemInDb) {
+      throw new NotFoundException('Problem dose not exist');
+    }
+    await this.problemsRepository.delete(id);
+    const deleteResponseDto: DeleteResponseDto = new DeleteResponseDto();
+    deleteResponseDto.statusCode = 200;
+    deleteResponseDto.message = 'Problem successfully deleted';
+
+    return deleteResponseDto;
   }
 }
