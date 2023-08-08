@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { GetChapterRes } from './dtos/chapter.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Chapter } from './entities/chapter.entity';
-import { parseProblem } from 'src/problems/utils/problem.util';
 import { QuestionType } from '../problems/entities/problem.entity';
 
 @Injectable()
@@ -45,10 +44,8 @@ export class ChaptersService {
       // TODO: user가 아직 풀지 않은 문제들 중 랜덤으로 3개를 반환
       // chapter.problems = ???
 
-      // 문제 가공
       chapter['problemList'] = chapter.problems.map((problem) => {
         const { id, type, scenario, content, answer, answerOptions } = problem;
-        //const parsedContent = parseProblem(content, type);
         return {
           id,
           type,
