@@ -35,17 +35,17 @@ export class Problem {
 
   /**
    * @description
-   * 문제의 내용 - 문제와 문제에 필요한 정보를 담고 있음
+   * 문제의 내용 - 문제 정보를 담고 있음
    *
    * @example
    * case 1: 객관식
-   * “문제:멋쟁이 사자처럼의 대표 색깔은?보기:검정색,노란색,파란색,빨간색"
+   * “멋쟁이 사자처럼의 대표 색깔은?"
    *
    * case 2: 주관식
-   * “문제:멋쟁이 사자처럼의 대표 색깔은?"
+   * “멋쟁이 사자처럼의 대표 색깔은?"
    *
    * case 3: 빈칸
-   * “문제:멋쟁이 사자처럼의 대표 색깔은 @@@이다."
+   * “멋쟁이 사자처럼의 대표 색깔은 @@@이다."
    */
   @Column({
     nullable: false,
@@ -59,7 +59,7 @@ export class Problem {
    *
    * @example
    * case 1: 객관식
-   * "1"
+   * "검정색"
    *
    * case 2: 주관식
    * "검정색"
@@ -72,4 +72,18 @@ export class Problem {
   })
   @IsString()
   answer!: string;
+
+  /**
+   * @description
+   * 객관식 보기(문자열로 주어짐)
+   *
+   * @example
+   * 객관식 보기가 "검은색", "빨간색", "초록색" 이라면
+   * answerOptions "검은색,빨간색,초록색" <- ',' 를 기준으로 split 하여 사용
+   */
+  @Column({
+    nullable: true,
+  })
+  @IsString()
+  answerOptions?: string | null;
 }

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { GetChapterRes } from './dtos/chapter.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Chapter } from './entities/chapter.entity';
-import { parseProblem } from 'src/problems/utils/problem.util';
+import { QuestionType } from '../problems/entities/problem.entity';
 
 @Injectable()
 export class ChaptersService {
@@ -44,16 +44,16 @@ export class ChaptersService {
       // TODO: user가 아직 풀지 않은 문제들 중 랜덤으로 3개를 반환
       // chapter.problems = ???
 
-      // 문제 가공
-      chapter['parsed_problem'] = chapter.problems.map((problem) => {
-        const { id, type, scenario, content, answer } = problem;
-        const parsedContent = parseProblem(content, type);
+      chapter['problemList'] = chapter.problems.map((problem) => {
+        const { id, type, scenario, content, answer, answerOptions } = problem;
         return {
           id,
           type,
           scenario,
-          question: parsedContent,
+          question: content,
           answer,
+          answerOptions:
+            type == QuestionType.MCQ ? answerOptions.split(',') : undefined,
         };
       });
 
