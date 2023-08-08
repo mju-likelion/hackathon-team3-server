@@ -5,6 +5,7 @@ import { GetChapterRes } from './dtos/chapter.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Chapter } from './entities/chapter.entity';
 import { parseProblem } from 'src/problems/utils/problem.util';
+import { QuestionType } from '../problems/entities/problem.entity';
 
 @Injectable()
 export class ChaptersService {
@@ -45,15 +46,17 @@ export class ChaptersService {
       // chapter.problems = ???
 
       // 문제 가공
-      chapter['parsed_problem'] = chapter.problems.map((problem) => {
-        const { id, type, scenario, content, answer } = problem;
-        const parsedContent = parseProblem(content, type);
+      chapter['problemList'] = chapter.problems.map((problem) => {
+        const { id, type, scenario, content, answer, answerOptions } = problem;
+        //const parsedContent = parseProblem(content, type);
         return {
           id,
           type,
           scenario,
-          question: parsedContent,
+          question: content,
           answer,
+          answerOptions:
+            type == QuestionType.MCQ ? answerOptions.split(',') : undefined,
         };
       });
 
