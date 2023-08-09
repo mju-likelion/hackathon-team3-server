@@ -100,7 +100,7 @@ export class ChaptersService {
 
   async findOne(id: string): Promise<FindOneResponseDto> {
     const chapterInDb = await this.chaptersRepository.findOne({
-      where: { id: id },
+      where: { id },
       relations: {
         learning: true,
         problems: true,
@@ -139,7 +139,7 @@ export class ChaptersService {
     updateDto: UpdateDto,
   ): Promise<UpdateResponseDto> {
     const chapterInDb = await this.chaptersRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!chapterInDb) {
       throw new NotFoundException('Chapter dose not exist');
@@ -154,10 +154,7 @@ export class ChaptersService {
       chapterInDb.learning = learningIdDb;
     }
 
-    chapterInDb.title = updateDto.title ? updateDto.title : chapterInDb.title;
-    chapterInDb.helpMessage = updateDto.helpMessage
-      ? updateDto.helpMessage
-      : chapterInDb.helpMessage;
+    this.updateChapter(updateDto, chapterInDb);
     await this.chaptersRepository.update(chapterInDb.id, chapterInDb);
 
     const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
@@ -167,7 +164,7 @@ export class ChaptersService {
   }
   async deleteOne(id: string): Promise<DeleteResponseDto> {
     const chapterInDb = await this.chaptersRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!chapterInDb) {
       throw new NotFoundException('Chapter dose not exist');
@@ -178,5 +175,14 @@ export class ChaptersService {
     deleteResponseDto.message = 'Chapter successfully deleted';
 
     return deleteResponseDto;
+  }
+
+  updateChapter(updateDto: UpdateDto, chapter: Chapter) {
+    if (updateDto.title) {
+      chapter.title = updateDto.title;
+    }
+    if (updateDto.helpMessage) {
+      chapter.helpMessage = updateDto.helpMessage;
+    }
   }
 }

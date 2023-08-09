@@ -127,7 +127,7 @@ export class ProblemsService {
 
   async findOne(id: string): Promise<FindOneResponseDto> {
     const problemIdDb = await this.problemsRepository.findOne({
-      where: { id: id },
+      where: { id },
       relations: {
         chapter: true,
       },
@@ -169,7 +169,7 @@ export class ProblemsService {
       );
     }
     const problemInDb = await this.problemsRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!problemInDb) {
       throw new NotFoundException('Problem dose not exist');
@@ -183,19 +183,7 @@ export class ProblemsService {
       }
       problemInDb.chapter = chapterInDb;
     }
-    problemInDb.type = updateDto.type ? updateDto.type : problemInDb.type;
-    problemInDb.scenario = updateDto.scenario
-      ? updateDto.scenario
-      : problemInDb.scenario;
-    problemInDb.content = updateDto.content
-      ? updateDto.content
-      : problemInDb.content;
-    problemInDb.answer = updateDto.answer
-      ? updateDto.answer
-      : problemInDb.answer;
-    problemInDb.answerOptions = updateDto.answerOptions
-      ? updateDto.answerOptions
-      : problemInDb.answerOptions;
+    this.updateProblem(updateDto, problemInDb);
 
     await this.problemsRepository.update(problemInDb.id, problemInDb);
 
@@ -207,7 +195,7 @@ export class ProblemsService {
 
   async deleteOne(id: string): Promise<DeleteResponseDto> {
     const problemInDb = await this.problemsRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!problemInDb) {
       throw new NotFoundException('Problem dose not exist');
@@ -218,5 +206,23 @@ export class ProblemsService {
     deleteResponseDto.message = 'Problem successfully deleted';
 
     return deleteResponseDto;
+  }
+
+  updateProblem(updateDto, problem) {
+    if (updateDto.type) {
+      problem.type = updateDto.type;
+    }
+    if (updateDto.scenario) {
+      problem.scenario = updateDto.scenario;
+    }
+    if (updateDto.content) {
+      problem.content = updateDto.content;
+    }
+    if (updateDto.answer) {
+      problem.answer = updateDto.answer;
+    }
+    if (updateDto.answerOptions) {
+      problem.answerOptions = updateDto.answerOptions;
+    }
   }
 }

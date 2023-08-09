@@ -123,7 +123,7 @@ export class LearningsService {
 
   async findOne(id: string): Promise<FindOneResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
-      where: { id: id },
+      where: { id },
       relations: {
         chapters: true,
       },
@@ -159,13 +159,15 @@ export class LearningsService {
     updateDto: UpdateDto,
   ): Promise<UpdateResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!learningInDb) {
       throw new NotFoundException('Learning dose not exist');
     }
 
-    learningInDb.type = updateDto.type ? updateDto.type : learningInDb.type;
+    if (updateDto.type) {
+      learningInDb.type = updateDto.type;
+    }
 
     await this.learningsRepository.update(learningInDb.id, learningInDb);
 
@@ -177,7 +179,7 @@ export class LearningsService {
 
   async deleteOne(id: string): Promise<DeleteResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
-      where: { id: id },
+      where: { id },
     });
     if (!learningInDb) {
       throw new NotFoundException('Learning dose not exist');
