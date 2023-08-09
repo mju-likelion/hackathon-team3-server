@@ -39,7 +39,7 @@ export class ChaptersController {
     return this.chaptersService.create(createDto);
   }
 
-  @Get('/find/:id')
+  @Get('/:id/all')
   async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
     return this.chaptersService.findOne(id);
   }
