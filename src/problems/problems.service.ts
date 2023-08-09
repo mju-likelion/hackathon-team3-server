@@ -106,13 +106,12 @@ export class ProblemsService {
 
   async create(createDto: CreateDto): Promise<CreateResponseDto> {
     const newProblem = this.problemsRepository.create(createDto);
-    console.log(createDto);
     if (createDto.chapterId) {
       const chapterInDb = await this.chaptersRepository.findOne({
         where: { id: createDto.chapterId },
       });
       if (!chapterInDb) {
-        throw new NotFoundException('Problem dose not exist');
+        throw new NotFoundException('Chapter dose not exist');
       }
       newProblem.chapter = chapterInDb;
     }
