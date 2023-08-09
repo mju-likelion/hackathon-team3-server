@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetChapterRes } from './dtos/chapter.dto';
@@ -56,6 +60,11 @@ export class ChaptersService {
 
       chapter['problemList'] = chapter.problems.map((problem) => {
         const { id, type, scenario, content, answerOptions } = problem;
+        if (QuestionType.MCQ && !problem.answerOptions) {
+          throw new BadRequestException(
+            'Problem type MCQ must have answerOptions',
+          );
+        }
         return {
           id,
           type,
