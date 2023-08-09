@@ -5,6 +5,13 @@ import { User } from 'src/users/entities/users.entity';
 import { Learning } from './entities/learning.entity';
 import { GetProgressRes } from './dtos/progress.dto';
 import { GetChaptersRes } from './dtos/chapters.dto';
+import { CreateDto } from './dtos/crud/create/create.dto';
+import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
+import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
+import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
+import { UpdateDto } from './dtos/crud/update/update.dto';
+import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
+import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
 
 @Injectable()
 export class LearningsService {
@@ -101,5 +108,87 @@ export class LearningsService {
     } catch (e) {
       throw e;
     }
+  }
+
+  async create(createDto: CreateDto): Promise<CreateResponseDto> {
+    const newLearning = this.learningsRepository.create(createDto);
+    await this.learningsRepository.save(newLearning);
+
+    const createResponseDto: CreateResponseDto = new CreateResponseDto();
+    createResponseDto.statusCode = 201;
+    createResponseDto.message = 'Learning successfully created';
+    createResponseDto.generatedLearningId = newLearning.id;
+    return createResponseDto;
+  }
+
+  async findOne(id: string): Promise<FindOneResponseDto> {
+    const learningInDb = await this.learningsRepository.findOne({
+      where: { id },
+      relations: {
+        chapters: true,
+      },
+    });
+    if (!learningInDb) {
+      throw new NotFoundException('Learning dose not exist');
+    }
+    const findOneResponseDto: FindOneResponseDto = new FindOneResponseDto();
+    findOneResponseDto.statusCode = 200;
+    findOneResponseDto.message = 'Learning successfully found';
+    findOneResponseDto.foundLearning = learningInDb;
+    return findOneResponseDto;
+  }
+
+  async findAll(): Promise<FindAllResponseDto> {
+    const learningsInDb = await this.learningsRepository.find({
+      relations: {
+        chapters: true,
+      },
+    });
+    if (!learningsInDb) {
+      throw new NotFoundException('Learnings dose not exist');
+    }
+    const findAllResponseDto: FindAllResponseDto = new FindAllResponseDto();
+    findAllResponseDto.statusCode = 200;
+    findAllResponseDto.message = 'Learnings successfully found';
+    findAllResponseDto.foundLearnings = learningsInDb;
+    return findAllResponseDto;
+  }
+
+  async updateOne(
+    id: string,
+    updateDto: UpdateDto,
+  ): Promise<UpdateResponseDto> {
+    const learningInDb = await this.learningsRepository.findOne({
+      where: { id },
+    });
+    if (!learningInDb) {
+      throw new NotFoundException('Learning dose not exist');
+    }
+
+    if (updateDto.type) {
+      learningInDb.type = updateDto.type;
+    }
+
+    await this.learningsRepository.update(learningInDb.id, learningInDb);
+
+    const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
+    updateResponseDto.statusCode = 200;
+    updateResponseDto.message = 'Learning successfully updated';
+    return updateResponseDto;
+  }
+
+  async deleteOne(id: string): Promise<DeleteResponseDto> {
+    const learningInDb = await this.learningsRepository.findOne({
+      where: { id },
+    });
+    if (!learningInDb) {
+      throw new NotFoundException('Learning dose not exist');
+    }
+    await this.learningsRepository.delete(id);
+    const deleteResponseDto: DeleteResponseDto = new DeleteResponseDto();
+    deleteResponseDto.statusCode = 200;
+    deleteResponseDto.message = 'Learning successfully deleted';
+
+    return deleteResponseDto;
   }
 }
