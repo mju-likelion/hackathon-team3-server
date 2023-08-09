@@ -52,15 +52,13 @@ export class ChaptersService {
         },
       });
       if (!chapter) throw new NotFoundException('Chapter not found');
-      if (chapter.problems.length === 0)
-        throw new NotFoundException('Problems not found within the chapter');
 
       // TODO: user가 아직 풀지 않은 문제들 중 랜덤으로 3개를 반환
       // chapter.problems = ???
 
       chapter['problemList'] = chapter.problems.map((problem) => {
         const { id, type, scenario, content, answerOptions } = problem;
-        if (QuestionType.MCQ && !problem.answerOptions) {
+        if (problem.type == QuestionType.MCQ && !problem.answerOptions) {
           throw new BadRequestException(
             'Problem type MCQ must have answerOptions',
           );
