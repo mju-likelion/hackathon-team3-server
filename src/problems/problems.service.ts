@@ -105,8 +105,21 @@ export class ProblemsService {
   }
 
   async create(createDto: CreateDto): Promise<CreateResponseDto> {
+    if (createDto.type == QuestionType.MCQ) {
+      if (!createDto.answerOptions) {
+        throw new BadRequestException(
+          'Problem type MCQ must have answerOptions',
+        );
+      } else if (!createDto.answerOptions.includes(',')) {
+        throw new BadRequestException("AnswerOptions must contains ','");
+      }
+    } else if (createDto.answerOptions) {
+      throw new BadRequestException(
+        "Only MCQ can have property 'answerOptions'",
+      );
+    }
+
     const newProblem = this.problemsRepository.create(createDto);
-    console.log(createDto);
     if (createDto.chapterId) {
       const chapterInDb = await this.chaptersRepository.findOne({
         where: { id: createDto.chapterId },
@@ -163,6 +176,15 @@ export class ProblemsService {
     id: string,
     updateDto: UpdateDto,
   ): Promise<UpdateResponseDto> {
+    if (updateDto.type == QuestionType.MCQ) {
+      if (!updateDto.answerOptions) {
+        throw new BadRequestException(
+          'Problem type MCQ must have answerOptions',
+        );
+      } else if (!updateDto.answerOptions.includes(',')) {
+        throw new BadRequestException("AnswerOptions must contains ','");
+      }
+    }
     if (updateDto.type != QuestionType.MCQ && updateDto.answerOptions) {
       throw new BadRequestException(
         "Only MCQ can have property 'answerOptions'",
