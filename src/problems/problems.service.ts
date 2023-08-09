@@ -125,7 +125,7 @@ export class ProblemsService {
         where: { id: createDto.chapterId },
       });
       if (!chapterInDb) {
-        throw new NotFoundException('Problem dose not exist');
+        throw new NotFoundException('Chapter dose not exist');
       }
       newProblem.chapter = chapterInDb;
     }
