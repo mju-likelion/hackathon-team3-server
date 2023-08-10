@@ -49,7 +49,7 @@ export class User {
       try {
         this.password = await bcrypt.hash(this.password, 10);
       } catch (e) {
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException('Failed to hash the password.');
       }
     }
   }
@@ -58,7 +58,7 @@ export class User {
     try {
       return await bcrypt.compare(plainPassword, this.password);
     } catch (e) {
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Failed to compare the password.');
     }
   }
 }
