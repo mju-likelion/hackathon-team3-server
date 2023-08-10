@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { GetChapterRes } from './dtos/chapter.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Chapter } from './entities/chapter.entity';
-import { QuestionType } from '../problems/entities/problem.entity';
+import { Problem, QuestionType } from '../problems/entities/problem.entity';
 import { CreateDto } from './dtos/crud/create/create.dto';
 import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
 import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
@@ -23,6 +23,8 @@ export class ChaptersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(User)
+    private problemsRepository: Repository<Problem>,
     @InjectRepository(Chapter)
     private chaptersRepository: Repository<Chapter>,
     @InjectRepository(Learning)
@@ -36,6 +38,9 @@ export class ChaptersService {
         relations: {
           completedChapters: {
             learning: true,
+          },
+          completedProblems: {
+            chapter: true,
           },
         },
       });
@@ -54,9 +59,11 @@ export class ChaptersService {
       if (!chapter) throw new NotFoundException('Chapter not found');
 
       // TODO: user가 아직 풀지 않은 문제들 중 랜덤으로 3개를 반환
-      // chapter.problems = ???
-
-      chapter['problemList'] = chapter.problems.map((problem) => {
+      const unsolvedProblems = await this.getRandomUnsolvedProblems(
+        userInDb,
+        3,
+      );
+      chapter['problemList'] = unsolvedProblems.map((problem) => {
         const { id, type, scenario, content, answerOptions } = problem;
         if (problem.type == QuestionType.MCQ && !problem.answerOptions) {
           throw new BadRequestException(
@@ -85,6 +92,27 @@ export class ChaptersService {
       throw e;
     }
   }
+
+  async getRandomUnsolvedProblems(
+    user: User,
+    count: number,
+  ): Promise<Problem[]> {
+    const solvedProblemIds: string[] =
+      user.completedProblems?.map((problem) => problem.id) || [];
+
+    const queryBuilder = this.problemsRepository.createQueryBuilder('problem');
+
+    if (solvedProblemIds.length > 0) {
+      queryBuilder.where('problem.id NOT IN (:...solvedProblemIds)', {
+        solvedProblemIds,
+      });
+    }
+    queryBuilder.orderBy('RAND()').take(count);
+    const plist = await queryBuilder.getMany();
+    console.log(plist);
+    return plist;
+  }
+
   async create(createDto: CreateDto): Promise<CreateResponseDto> {
     const newChapter = this.chaptersRepository.create(createDto);
     if (createDto.learningId) {
