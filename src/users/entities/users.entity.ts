@@ -11,6 +11,7 @@ import {
 import { IsEmail, IsString, Matches } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { Chapter } from 'src/chapters/entities/chapter.entity';
+import { Problem } from '../../problems/entities/problem.entity';
 
 @Entity()
 export class User {
@@ -36,6 +37,10 @@ export class User {
   @ManyToMany(() => Chapter)
   @JoinTable()
   completedChapters?: Chapter[];
+
+  @ManyToMany(() => Problem)
+  @JoinTable()
+  completedProblems?: Problem[];
 
   @BeforeInsert()
   @BeforeUpdate()
