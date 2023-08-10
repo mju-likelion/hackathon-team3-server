@@ -23,7 +23,7 @@ export class ChaptersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    @InjectRepository(User)
+    @InjectRepository(Problem)
     private problemsRepository: Repository<Problem>,
     @InjectRepository(Chapter)
     private chaptersRepository: Repository<Chapter>,
@@ -58,7 +58,6 @@ export class ChaptersService {
       });
       if (!chapter) throw new NotFoundException('Chapter not found');
 
-      // TODO: user가 아직 풀지 않은 문제들 중 랜덤으로 3개를 반환
       const unsolvedProblems = await this.getRandomUnsolvedProblems(
         userInDb,
         3,
@@ -108,9 +107,7 @@ export class ChaptersService {
       });
     }
     queryBuilder.orderBy('RAND()').take(count);
-    const plist = await queryBuilder.getMany();
-    console.log(plist);
-    return plist;
+    return await queryBuilder.getMany();
   }
 
   async create(createDto: CreateDto): Promise<CreateResponseDto> {
