@@ -21,12 +21,13 @@ import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
 import { UpdateDto } from './dtos/crud/update/update.dto';
 import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
 import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
+import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 
 @Controller('problems')
 export class ProblemsController {
   constructor(private readonly problemsService: ProblemsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerBehindProxyGuard, JwtAuthGuard)
   @Post(':id/submit')
   async submitProblem(
     @AuthUser() user: User,
