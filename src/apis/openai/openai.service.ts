@@ -7,7 +7,6 @@ import { ScoreProblemDto } from './dtos/score-problem.dto';
 import { OptimizeStringDto } from './dtos/optimize-string.dto';
 import { ScoreProblemResponseDto } from './dtos/score-problem-response.dto';
 import { OptimizeStringResponseDto } from './dtos/optimize-string-response.dto';
-import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 
 @Injectable()
 export class OpenaiService {
@@ -22,7 +21,6 @@ export class OpenaiService {
     }),
   );
 
-  @UseGuards(ThrottlerBehindProxyGuard)
   async scoreProblem(scoreProblemDto: ScoreProblemDto) {
     const openAiChatCompletionRequestBuilder: OpenAiChatCompletionRequestBuilder =
       new OpenAiChatCompletionRequestBuilder();
@@ -52,7 +50,6 @@ export class OpenaiService {
     return scoreProblemResponseDto;
   }
 
-  @UseGuards(ThrottlerBehindProxyGuard)
   async optimizeStringSpaces(optimizeStringDto: OptimizeStringDto) {
     const openAiChatCompletionRequestBuilder: OpenAiChatCompletionRequestBuilder =
       new OpenAiChatCompletionRequestBuilder();
