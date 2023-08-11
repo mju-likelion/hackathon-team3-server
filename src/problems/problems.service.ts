@@ -1,7 +1,7 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -47,7 +47,7 @@ export class ProblemsService {
       });
 
       if (!problem) {
-        throw new NotFoundException('Invalid problem ID');
+        throw new NotFoundException('Problem dose not exist');
       }
 
       if (problem.type === QuestionType.MCQ) {
@@ -77,7 +77,7 @@ export class ProblemsService {
             });
 
           if (!scoreProblemResponseDto) {
-            throw new ConflictException('OpenAI did not response');
+            throw new InternalServerErrorException('OpenAI did not response');
           }
 
           submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
