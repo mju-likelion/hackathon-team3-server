@@ -1,5 +1,5 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Payload } from './jwt.payload';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (user) {
       return user;
     } else {
-      throw new UnauthorizedException('User Not Found');
+      throw new NotFoundException('User Not Found');
     }
   }
 }
