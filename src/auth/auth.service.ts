@@ -57,6 +57,7 @@ export class AuthService {
 
     const sign = this.jwtService.sign(payload);
     response.cookie('jwt', sign, {
+      domain: 'surfing-likelion.com',
       httpOnly: true,
     });
     const postLoginRes: PostLoginRes = new PostLoginRes();
