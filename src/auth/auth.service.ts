@@ -62,7 +62,7 @@ export class AuthService {
     const postLoginRes: PostLoginRes = new PostLoginRes();
     postLoginRes.statusCode = 200;
     postLoginRes.message = 'login success';
-    postLoginRes.nickName = userData.nickname;
+    postLoginRes.nickname = userData.nickname;
 
     return response.json(postLoginRes);
   }
