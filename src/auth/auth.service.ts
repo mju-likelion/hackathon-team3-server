@@ -59,6 +59,7 @@ export class AuthService {
     response.cookie('jwt', sign, {
       domain: 'surfing-likelion.com',
       httpOnly: true,
+      secure: true,
     });
     const postLoginRes: PostLoginRes = new PostLoginRes();
     postLoginRes.statusCode = 200;
