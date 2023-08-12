@@ -41,7 +41,7 @@ export class AuthService {
   async login(loginDto: LoginDto, response: Response) {
     const userData = await this.usersRepository.findOne({
       where: { email: loginDto.email },
-      select: { id: true, email: true, password: true },
+      select: { id: true, email: true, password: true, nickname: true },
     });
     if (!userData || !(await userData.checkPassword(loginDto.password))) {
       throw !userData
@@ -62,6 +62,7 @@ export class AuthService {
     const postLoginRes: PostLoginRes = new PostLoginRes();
     postLoginRes.statusCode = 200;
     postLoginRes.message = 'login success';
+    postLoginRes.nickname = userData.nickname;
 
     return response.json(postLoginRes);
   }
