@@ -58,11 +58,8 @@ export class ChaptersService {
       });
       if (!chapter) throw new NotFoundException('Chapter not found');
 
-      const unsolvedProblems = await this.getRandomUnsolvedProblems(
-        userInDb,
-        3,
-      );
-      chapter['problemList'] = unsolvedProblems.map((problem) => {
+      const randomProblems = await this.getRandomProblems(chapter, 3);
+      chapter['problemList'] = randomProblems.map((problem) => {
         const { id, type, scenario, content, answerOptions } = problem;
         if (problem.type == QuestionType.MCQ && !problem.answerOptions) {
           throw new BadRequestException(
@@ -92,22 +89,21 @@ export class ChaptersService {
     }
   }
 
-  async getRandomUnsolvedProblems(
-    user: User,
-    count: number,
-  ): Promise<Problem[]> {
-    const solvedProblemIds: string[] =
-      user.completedProblems?.map((problem) => problem.id) || [];
+  async getRandomProblems(chapter: Chapter, count: number): Promise<Problem[]> {
+    const randomProblems: Problem[] = [];
 
-    const queryBuilder = this.problemsRepository.createQueryBuilder('problem');
-
-    if (solvedProblemIds.length > 0) {
-      queryBuilder.where('problem.id NOT IN (:...solvedProblemIds)', {
-        solvedProblemIds,
-      });
+    if (chapter.problems.length < 3) {
+      return chapter.problems;
     }
-    queryBuilder.orderBy('RAND()').take(count);
-    return await queryBuilder.getMany();
+    while (randomProblems.length < count) {
+      const randomIndex = Math.floor(Math.random() * chapter.problems.length);
+      const selectedProblem = chapter.problems[randomIndex];
+
+      if (!randomProblems.includes(selectedProblem)) {
+        randomProblems.push(selectedProblem);
+      }
+    }
+    return randomProblems;
   }
 
   async create(createDto: CreateDto): Promise<CreateResponseDto> {
