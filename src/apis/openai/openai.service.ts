@@ -59,7 +59,7 @@ export class OpenaiService {
         optimizeStringDto.requestedString,
     );
     openAiChatCompletionRequestBuilder.setSystemRole(
-      'You have to response only result sentence\n',
+      'You have to response only result sentence. if sentence does not require any spaces to be corrected, return origin sentence\n',
     );
     if (optimizeStringDto.temperature) {
       openAiChatCompletionRequestBuilder.setTemperature(
@@ -74,7 +74,7 @@ export class OpenaiService {
     const optimizeStringResponseDto: OptimizeStringResponseDto =
       new OptimizeStringResponseDto();
     optimizeStringResponseDto.optimizedString =
-      response.data.choices[0].message.content;
+      response.data.choices[0].message.content.toLowerCase();
     return optimizeStringResponseDto;
   }
 }
