@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 import { Problem } from 'src/problems/entities/problem.entity';
 import { Learning } from 'src/learnings/entities/learning.entity';
 
@@ -21,6 +21,10 @@ export class Chapter {
   @Column({ nullable: true })
   @IsString()
   helpMessage?: string;
+
+  @Column()
+  @IsNumber()
+  order!: number;
 
   @OneToMany((type) => Problem, (problem) => problem.chapter, {
     nullable: true,
