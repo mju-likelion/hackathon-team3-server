@@ -105,7 +105,6 @@ export class ProblemsService {
         if (isChapterComplete) {
           userInDb.completedChapters.push(problem.chapter);
         }
-        console.log(userInDb);
         await this.userRepository.save(userInDb);
         submitResponseDto.isChapterComplete = isChapterComplete;
       }
