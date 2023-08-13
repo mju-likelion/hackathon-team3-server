@@ -216,5 +216,8 @@ export class ChaptersService {
     if (updateDto.helpMessage) {
       chapter.helpMessage = updateDto.helpMessage;
     }
+    if (updateDto.order) {
+      chapter.order = updateDto.order;
+    }
   }
 }
