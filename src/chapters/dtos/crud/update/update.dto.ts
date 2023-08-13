@@ -1,11 +1,3 @@
-import { IsString } from 'class-validator';
+import { CreateDto } from '../create/create.dto';
 
-export class UpdateDto {
-  @IsString()
-  title!: string;
-
-  @IsString()
-  helpMessage?: string;
-
-  learningId?: string;
-}
+export class UpdateDto extends CreateDto {}
