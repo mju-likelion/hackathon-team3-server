@@ -46,6 +46,7 @@ export class ProblemsService {
     try {
       const problem = await this.problemsRepository.findOne({
         where: { id: problemId },
+        relations: { chapter: true },
       });
 
       if (!problem) {
