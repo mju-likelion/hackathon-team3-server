@@ -100,10 +100,14 @@ export class LearningsService {
         chapter['isCompleted'] = isCompleted;
       });
 
+      // 진도율 추가
+      const { progress } = await this.getProgress(user, type);
+
       return {
         statusCode: 200,
         message: 'Chapters successfully retrieved',
         chapters: learning.chapters,
+        progress,
       };
     } catch (e) {
       throw e;
