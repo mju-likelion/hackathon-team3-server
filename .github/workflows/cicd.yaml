@@ -45,7 +45,7 @@ jobs:
           scripts: |
             cd hackathon-team3-server
             docker login --username ${{secrets.DOCKERHUB_USERNAME}} --password ${{secrets.DOCKERHUB_PASSWORD}}
-            docker system prune -a --vloumes -f
+            docker system prune -a --volumes -f
             docker compose pull -q
             docker compose up --force-recreate --build -d --quiet-pull 2>log.out
             cat log.out
