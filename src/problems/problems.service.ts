@@ -46,6 +46,7 @@ export class ProblemsService {
     try {
       const problem = await this.problemsRepository.findOne({
         where: { id: problemId },
+        relations: { chapter: true },
       });
 
       if (!problem) {
@@ -104,6 +105,7 @@ export class ProblemsService {
         if (isChapterComplete) {
           userInDb.completedChapters.push(problem.chapter);
         }
+        console.log(userInDb);
         await this.userRepository.save(userInDb);
         submitResponseDto.isChapterComplete = isChapterComplete;
       }
