@@ -97,6 +97,11 @@ export class LearningsService {
         relations: {
           chapters: true,
         },
+        order: {
+          chapters: {
+            order: 'ASC',
+          },
+        },
       });
       if (!learning) throw new NotFoundException('Learning not found ');
       if (learning.chapters.length === 0)
