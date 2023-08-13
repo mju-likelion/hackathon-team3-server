@@ -29,6 +29,8 @@ export class ProblemsService {
     private problemsRepository: Repository<Problem>,
     @InjectRepository(Chapter)
     private chaptersRepository: Repository<Chapter>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private readonly openaiService: OpenaiService,
   ) {}
 
@@ -82,6 +84,28 @@ export class ProblemsService {
 
           submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
         }
+      }
+      submitResponseDto.isChapterComplete = false;
+      if (submitResponseDto.isCorrect) {
+        const userInDb = await this.userRepository.findOne({
+          where: { id: user.id },
+          relations: ['completedProblems', 'completedChapters'],
+        });
+
+        const isProblemAlreadyCompleted = userInDb.completedProblems.some(
+          (p) => p.id === problem.id,
+        );
+
+        if (!isProblemAlreadyCompleted) {
+          userInDb.completedProblems.push(problem);
+        }
+        const isChapterComplete =
+          userInDb.completedProblems.length >= 3 && submitDto.currentTab === 3;
+        if (isChapterComplete) {
+          userInDb.completedChapters.push(problem.chapter);
+        }
+        await this.userRepository.save(userInDb);
+        submitResponseDto.isChapterComplete = isChapterComplete;
       }
 
       return submitResponseDto;
