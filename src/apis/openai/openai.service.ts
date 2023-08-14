@@ -33,7 +33,7 @@ export class OpenaiService {
         scoreProblemDto.submittedAnswer,
     );
     openAiChatCompletionRequestBuilder.setSystemRole(
-      'Score 5 times and return the average value only(number)\n',
+      'Score 5 times and return only the average value as a number\n',
     );
     if (scoreProblemDto.temperature) {
       openAiChatCompletionRequestBuilder.setTemperature(

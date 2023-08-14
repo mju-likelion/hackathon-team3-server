@@ -72,18 +72,24 @@ export class ProblemsService {
         ) {
           submitResponseDto.isCorrect = false;
         } else {
-          const scoreProblemResponseDto: ScoreProblemResponseDto =
-            await this.openaiService.scoreProblem({
-              originAnswer: problem.answer,
-              submittedAnswer: submitDto.answer,
-              temperature: 0,
-            });
+          if (
+            submitDto.answer.split(' ').length === problemAnswerTokens.length
+          ) {
+            submitResponseDto.isCorrect = true;
+          } else {
+            const scoreProblemResponseDto: ScoreProblemResponseDto =
+              await this.openaiService.scoreProblem({
+                originAnswer: problem.answer,
+                submittedAnswer: submitDto.answer,
+                temperature: 0,
+              });
 
-          if (!scoreProblemResponseDto) {
-            throw new InternalServerErrorException('OpenAI did not response');
+            if (!scoreProblemResponseDto) {
+              throw new InternalServerErrorException('OpenAI did not response');
+            }
+
+            submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
           }
-
-          submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
         }
       }
       submitResponseDto.isChapterComplete = false;
