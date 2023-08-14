@@ -72,7 +72,7 @@ export class AuthService {
     return response.json(postLoginRes);
   }
 
-  logout(@Res({ passthrough: true }) res: Response): LogoutResponseDto {
+  logout(@Res() res: Response): LogoutResponseDto {
     res.clearCookie('jwt');
     const logoutResponseDto: LogoutResponseDto = new LogoutResponseDto();
     logoutResponseDto.statusCode = 200;
