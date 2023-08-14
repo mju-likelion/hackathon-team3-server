@@ -2,6 +2,8 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Req,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +16,7 @@ import { JoinDto } from './dtos/join.dto';
 import { LoginDto } from './dtos/login.dto';
 import { PostJoinRes } from './dtos/join-response.dto';
 import { PostLoginRes } from './dtos/login-response.dto';
+import { LogoutResponseDto } from './dtos/logout-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,5 +70,13 @@ export class AuthService {
     postLoginRes.nickname = userData.nickname;
 
     return response.json(postLoginRes);
+  }
+
+  logout(@Res({ passthrough: true }) res: Response): LogoutResponseDto {
+    res.clearCookie('jwt');
+    const logoutResponseDto: LogoutResponseDto = new LogoutResponseDto();
+    logoutResponseDto.statusCode = 200;
+    logoutResponseDto.message = 'logout success';
+    return logoutResponseDto;
   }
 }
