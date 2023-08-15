@@ -73,7 +73,11 @@ export class AuthService {
   }
 
   logout(@Res() res: Response): LogoutResponseDto {
-    res.clearCookie('jwt');
+    res.clearCookie('jwt', {
+      domain: 'surfing-likelion.com',
+      httpOnly: true,
+      secure: true,
+    });
     const logoutResponseDto: LogoutResponseDto = new LogoutResponseDto();
     logoutResponseDto.statusCode = 200;
     logoutResponseDto.message = 'logout success';
