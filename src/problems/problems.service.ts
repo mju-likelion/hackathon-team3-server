@@ -52,9 +52,17 @@ export class ProblemsService {
       if (!problem) {
         throw new NotFoundException('Problem dose not exist');
       }
-
+      console.log('사용자 제출 답', submitDto.answer);
+      console.log('DB에 있는 답', problem.answer);
       if (problem.type === QuestionType.MCQ) {
         submitResponseDto.isCorrect = problem.answer === submitDto.answer;
+      } else if (
+        this.isSubmittedAnswerValid(
+          problem.answer.toLowerCase().split(' '),
+          submitDto.answer.trim(),
+        )
+      ) {
+        submitResponseDto.isCorrect = true;
       } else {
         const optimizeStringResponseDto: OptimizeStringResponseDto =
           await this.openaiService.optimizeStringSpaces({
@@ -66,6 +74,8 @@ export class ProblemsService {
           .toLowerCase()
           .split(' ');
 
+        console.log('공백을 처리한 사용자 제출 답', submitDto.answer);
+        console.log('split힌 DB에 있는 답', problemAnswerTokens);
         if (
           !this.isSubmittedAnswerValid(
             problemAnswerTokens,
@@ -91,6 +101,7 @@ export class ProblemsService {
             }
 
             submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
+            console.log('점수', scoreProblemResponseDto.score);
           }
         }
       }
