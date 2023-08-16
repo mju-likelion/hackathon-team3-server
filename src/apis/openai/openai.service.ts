@@ -59,7 +59,7 @@ export class OpenaiService {
         optimizeStringDto.requestedString,
     );
     openAiChatCompletionRequestBuilder.setSystemRole(
-      'You have to response only result sentence. if sentence does not require any spaces to be corrected, return origin sentence\n',
+      "You should return only the whitespace-adjusted statements. If you don't need to adjust the whitespace, just return the sentence I gave you.\n",
     );
     if (optimizeStringDto.temperature) {
       openAiChatCompletionRequestBuilder.setTemperature(
