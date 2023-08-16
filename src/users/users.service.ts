@@ -30,7 +30,7 @@ export class UsersService {
         select: { id: true, email: true, password: true },
       });
 
-      if (password === oldPassword) {
+      if (await user.checkPassword(password)) {
         throw new BadRequestException('Same password');
       }
       if (password && oldPassword) {
