@@ -62,7 +62,9 @@ export class ProblemsService {
             temperature: 0.1,
           });
         submitDto.answer = optimizeStringResponseDto.optimizedString;
-        const problemAnswerTokens: string[] = problem.answer.split(' ');
+        const problemAnswerTokens: string[] = problem.answer
+          .toLowerCase()
+          .split(' ');
 
         if (
           !this.isSubmittedAnswerValid(
