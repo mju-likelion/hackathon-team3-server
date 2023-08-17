@@ -6,6 +6,8 @@ services:
     restart: always
     env_file:
       - .env.prod
+    environment:
+      MYSQL_ROOT_PASSWORD: # mysql root password
     ports:
       - 3306:3306
     networks:
@@ -13,6 +15,8 @@ services:
   surfing-server: # Name of container
     image: dh3356/surfing-server:latest
     restart: always
+    env_file:
+      - .env.prod
     ports:
       - 3000:3000
     networks:
