@@ -1,0 +1,24 @@
+version: '2'
+
+services:
+  mysql: # Name of container
+    image: mysql
+    restart: always
+    env_file:
+      - .env.prod
+    ports:
+      - 3306:3306
+    networks:
+      - shared-network
+  surfing-server: # Name of container
+    image: dh3356/surfing-server:latest
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - shared-network
+    depends_on:
+      - mysql
+networks:
+  shared-network:
+    driver: bridge
