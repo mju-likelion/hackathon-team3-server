@@ -24,7 +24,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get()
   profile(@AuthUser() user: User): ProfileRes {
-    console.log(user);
     return {
       statusCode: 200,
       message: 'User profile successfully retrieved',
@@ -35,7 +34,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete()
   async deleteAccount(@AuthUser() user: User): Promise<DeleteAccountRes> {
-    console.log(user);
     return this.usersService.deleteAccount(user);
   }
 
