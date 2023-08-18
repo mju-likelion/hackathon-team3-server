@@ -29,14 +29,14 @@ export class UsersService {
         where: { id: user.id },
         select: { id: true, email: true, password: true },
       });
-
-      if (await user.checkPassword(password)) {
-        throw new BadRequestException('Same password');
-      }
       if (password && oldPassword) {
-        if (await userWithPassword?.checkPassword(oldPassword))
-          userWithPassword.password = password;
-        else throw new UnauthorizedException('The password is incorrect');
+        if (await userWithPassword?.checkPassword(oldPassword)) {
+          if (await userWithPassword.checkPassword(password)) {
+            throw new BadRequestException('Same password');
+          } else {
+            userWithPassword.password = password;
+          }
+        } else throw new UnauthorizedException('The password is incorrect');
 
         await this.usersRepository.save(userWithPassword);
       } else {
