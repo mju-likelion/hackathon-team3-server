@@ -9,8 +9,9 @@ import { ConfigModule } from '@nestjs/config';
 import { validationSchema } from './config/validationSchema';
 import { AuthModule } from './auth/auth.module';
 import { OpenaiModule } from './apis/openai/openai.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerBehindProxyGuard } from './common/throttler-behind-proxy.guard';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { APP_GUARD } from '@nestjs/core';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ThrottlerBehindProxyGuard,
     },
   ],
 })
