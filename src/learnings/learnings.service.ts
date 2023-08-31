@@ -51,12 +51,17 @@ export class LearningsService {
       if (learning.chapters.length === 0)
         throw new NotFoundException('Chapters not found within the learning');
 
+      const userCompletedChapters = userInDb.completedChapters.filter(
+        (chapter) => {
+          return chapter.learning.type === +type;
+        },
+      );
+
       // 해당 타입 내 완료한 챕터 수
       const progress =
-        learning.chapters.length /
-        userInDb.completedChapters.filter((chapter) => {
-          return chapter.learning.type === +type;
-        }).length;
+        userCompletedChapters.length === 0
+          ? 0
+          : learning.chapters.length / userCompletedChapters.length;
 
       return {
         statusCode: 200,
