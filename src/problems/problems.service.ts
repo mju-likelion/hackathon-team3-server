@@ -109,10 +109,13 @@ export class ProblemsService {
       if (submitResponseDto.isCorrect) {
         const userInDb = await this.userRepository.findOne({
           where: { id: user.id },
-          relations: ['completedProblems', 'completedChapters'],
+          relations: {
+            completedProblems: { chapter: true },
+            completedChapters: true,
+          },
         });
 
-        const isProblemAlreadyCompleted = userInDb.completedProblems.some(
+        const isProblemAlreadyCompleted = userInDb.completedProblems.find(
           (p) => p.id === problem.id,
         );
 
