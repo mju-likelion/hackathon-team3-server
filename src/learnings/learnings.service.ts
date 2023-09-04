@@ -30,6 +30,11 @@ export class LearningsService {
           completedChapters: {
             learning: true,
           },
+          completedProblems: {
+            chapter: {
+              learning: true,
+            },
+          },
         },
       });
       if (!userInDb) {
@@ -50,19 +55,19 @@ export class LearningsService {
 
       if (learning.chapters.length === 0)
         throw new NotFoundException('Chapters not found within the learning');
+      const totalChaptersCount = learning.chapters.length;
 
-      const userCompletedChapters = userInDb.completedChapters.filter(
-        (chapter) => {
-          return chapter.learning.type === +type;
-        },
+      // 푼 문제 중 현재 타입과 일치하는 것 필터링
+      const completedProblems = userInDb.completedProblems.filter(
+        (problem) => problem.chapter.learning.type === +type,
       );
 
-      // 해당 타입 내 완료한 챕터 수
-      const progress =
-        userCompletedChapters.length === 0
-          ? 0
-          : learning.chapters.length / userCompletedChapters.length;
+      const completedProblemsCount = completedProblems.length;
 
+      // 전체 챕터 수 * 3(각 챕터별 문제 수) = 100%
+      const progress = Math.floor(
+        (completedProblemsCount / (totalChaptersCount * 3)) * 100,
+      );
       return {
         statusCode: 200,
         message: 'Progress successfully retrieved',
