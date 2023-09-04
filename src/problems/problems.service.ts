@@ -120,15 +120,8 @@ export class ProblemsService {
           userInDb.completedProblems.push(problem);
         }
         const isChapterComplete =
-          userInDb.completedProblems.filter(
-            (p) => p.chapter.id === problem.chapter.id,
-          ).length >= 3;
-        if (
-          isChapterComplete &&
-          userInDb.completedChapters.find(
-            (chapter) => chapter.id === problem.chapter.id,
-          )
-        ) {
+          userInDb.completedProblems.length >= 3 && submitDto.currentTab === 3;
+        if (isChapterComplete) {
           userInDb.completedChapters.push(problem.chapter);
         }
         await this.userRepository.save(userInDb);
