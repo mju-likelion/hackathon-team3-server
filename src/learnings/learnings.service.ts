@@ -61,7 +61,7 @@ export class LearningsService {
       const progress =
         userCompletedChapters.length === 0
           ? 0
-          : learning.chapters.length / userCompletedChapters.length;
+          : (userCompletedChapters.length / learning.chapters.length) * 100;
 
       return {
         statusCode: 200,
