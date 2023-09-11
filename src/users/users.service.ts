@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +13,7 @@ import {
   ModifyPasswordRes,
 } from './dtos/modify-password.dto';
 import { DeleteAccountRes } from './dtos/delete-account.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class UsersService {
@@ -52,7 +54,10 @@ export class UsersService {
     }
   }
 
-  async deleteAccount(user: User): Promise<DeleteAccountRes> {
+  async deleteAccount(
+    user: User,
+    @Res() res: Response,
+  ): Promise<DeleteAccountRes> {
     const userInDb = await this.usersRepository.findOne({
       where: { id: user.id },
     });
@@ -62,6 +67,11 @@ export class UsersService {
     const result = await this.usersRepository.remove(user);
 
     if (result) {
+      res.clearCookie('jwt', {
+        domain: 'surfing-likelion.com',
+        httpOnly: true,
+        secure: true,
+      });
       return {
         statusCode: 200,
         message: 'Account successfully deleted',
