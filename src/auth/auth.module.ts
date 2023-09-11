@@ -7,6 +7,9 @@ import { JwtStrategy } from './jwt/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../users/entities/users.entity';
+import { EmailModule } from '../email/email.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -18,6 +21,12 @@ import { User } from '../users/entities/users.entity';
       }),
     }),
     TypeOrmModule.forFeature([User]),
+    EmailModule,
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

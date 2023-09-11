@@ -1,8 +1,8 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
-  Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,13 +17,21 @@ import { LoginDto } from './dtos/login.dto';
 import { PostJoinRes } from './dtos/join-response.dto';
 import { PostLoginRes } from './dtos/login-response.dto';
 import { LogoutResponseDto } from './dtos/logout-response.dto';
+import { EmailService } from '../email/email.service';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { v4 as uuidv4 } from 'uuid';
+import { EmailVerificationResponseDto } from './dtos/email-verification-response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async join(joinDto: JoinDto): Promise<PostJoinRes> {
@@ -34,10 +42,18 @@ export class AuthService {
     ) {
       throw new ConflictException('이미 존재하는 사용자 입니다.');
     }
-    await this.usersRepository.save(this.usersRepository.create(joinDto));
+
+    const userInDto: User = this.usersRepository.create(joinDto);
+    const verifyToken = uuidv4();
+    await this.saveUserToRedis(verifyToken, userInDto);
+    await this.emailService.sendEmail(
+      joinDto.email,
+      '이메일 인증',
+      this.emailService.createVerificationEmail(verifyToken, '5'),
+    );
     const postJoinRes: PostJoinRes = new PostJoinRes();
     postJoinRes.statusCode = 201;
-    postJoinRes.message = 'join success';
+    postJoinRes.message = 'email successfully sent';
     return postJoinRes;
   }
 
@@ -82,5 +98,22 @@ export class AuthService {
     logoutResponseDto.statusCode = 200;
     logoutResponseDto.message = 'logout success';
     return logoutResponseDto;
+  }
+
+  async saveUserToRedis(verifyToken: string, userData: User) {
+    await this.cacheManager.set(verifyToken, userData, { ttl: 300 });
+  }
+
+  async emailVerification(verifyToken: string) {
+    const userData = await this.cacheManager.get(verifyToken);
+    if (!userData) {
+      throw new NotFoundException('verifyToken not found.');
+    }
+    await this.usersRepository.save(this.usersRepository.create(userData));
+    const emailVerificationResponseDto: EmailVerificationResponseDto =
+      new EmailVerificationResponseDto();
+    emailVerificationResponseDto.statusCode = 201;
+    emailVerificationResponseDto.message = 'user successfully created';
+    return emailVerificationResponseDto;
   }
 }
