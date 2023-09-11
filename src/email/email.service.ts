@@ -8,7 +8,7 @@ import { ConfigType } from '@nestjs/config';
 import emailConfig from './config/emailConfig';
 
 @Injectable()
-export class SendEmailService {
+export class EmailService {
   constructor(
     @Inject(emailConfig.KEY) private config: ConfigType<typeof emailConfig>,
   ) {
