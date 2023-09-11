@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Patch,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthUser } from '../auth/auth-user.decorator';
@@ -16,6 +17,7 @@ import {
 } from './dtos/modify-password.dto';
 import { DeleteAccountRes } from './dtos/delete-account.dto';
 import { ProfileRes } from './dtos/profile.dto';
+import { Response } from 'express';
 
 @Controller('users')
 export class UsersController {
@@ -33,8 +35,11 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Delete()
-  async deleteAccount(@AuthUser() user: User): Promise<DeleteAccountRes> {
-    return this.usersService.deleteAccount(user);
+  async deleteAccount(
+    @AuthUser() user: User,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<DeleteAccountRes> {
+    return this.usersService.deleteAccount(user, res);
   }
 
   @UseGuards(JwtAuthGuard)
