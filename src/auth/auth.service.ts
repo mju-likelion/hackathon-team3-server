@@ -17,18 +17,17 @@ import { LoginDto } from './dtos/login.dto';
 import { PostJoinRes } from './dtos/join-response.dto';
 import { PostLoginRes } from './dtos/login-response.dto';
 import { LogoutResponseDto } from './dtos/logout-response.dto';
-import { SendEmailService } from '../email/email.service';
+import { EmailService } from '../email/email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailVerificationResponseDto } from './dtos/email-verification-response.dto';
-import { EmailCreator } from 'src/email/email-creator';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly sendEmailService: SendEmailService,
+    private readonly emailService: EmailService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @Inject(CACHE_MANAGER)
@@ -47,13 +46,10 @@ export class AuthService {
     const userInDto: User = this.usersRepository.create(joinDto);
     const verifyToken = uuidv4();
     await this.saveUserToRedis(verifyToken, userInDto);
-    await this.sendEmailService.sendEmail(
+    await this.emailService.sendEmail(
       joinDto.email,
       '이메일 인증',
-      new EmailCreator().createVerificationEmail(
-        `https://surfing-likelion.com/email-verification?verifyToken=${verifyToken}`,
-        '5',
-      ),
+      this.emailService.createVerificationEmail(verifyToken, '5'),
     );
     const postJoinRes: PostJoinRes = new PostJoinRes();
     postJoinRes.statusCode = 201;
