@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { SendEmailService } from './email.service';
+import { EmailService } from './email.service';
 import { ConfigModule } from '@nestjs/config';
 import emailConfig from './config/emailConfig';
 
@@ -9,7 +9,7 @@ import emailConfig from './config/emailConfig';
       load: [emailConfig],
     }),
   ],
-  providers: [SendEmailService],
-  exports: [SendEmailService],
+  providers: [EmailService],
+  exports: [EmailService],
 })
 export class EmailModule {}
