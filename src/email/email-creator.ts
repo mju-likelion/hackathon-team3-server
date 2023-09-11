@@ -1,5 +1,5 @@
 export class EmailCreator {
-  createVerificationEmail(verificationToken: string, expirationTime: string) {
+  createVerificationEmail(verificationUrl: string, expirationTime: string) {
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -15,7 +15,7 @@ export class EmailCreator {
       <body style="text-align: center; padding: 20px;">
         <h1>이메일 인증</h1>
         <p>아래 버튼을 클릭하여 이메일 인증을 완료하세요.</p>
-        <a href="${verificationToken}" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: #fff; text-decoration: none; border-radius: 5px;">인증하기</a>
+        <a href="${verificationUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: #fff; text-decoration: none; border-radius: 5px;">인증하기</a>
         <p>이 메일은 ${expirationTime}분 동안 유효합니다.</p>
       </body>
       </html>
