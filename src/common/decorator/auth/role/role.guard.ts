@@ -1,9 +1,9 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
+  ForbiddenException,
   NotFoundException,
-  UnauthorizedException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
@@ -29,7 +29,7 @@ export class RoleGuard implements CanActivate {
       return true;
     }
     if (user.role !== roles[0]) {
-      throw new UnauthorizedException('Unauthorized User');
+      throw new ForbiddenException('Unauthorized User');
     }
     return roles.includes(user.role);
   }
