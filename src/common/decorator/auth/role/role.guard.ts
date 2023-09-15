@@ -29,7 +29,7 @@ export class RoleGuard implements CanActivate {
       return true;
     }
     if (user.role !== roles[0]) {
-      throw new ForbiddenException('Unauthorized User');
+      throw new ForbiddenException('Access denied');
     }
     return roles.includes(user.role);
   }
