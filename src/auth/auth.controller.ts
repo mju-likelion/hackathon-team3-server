@@ -5,7 +5,7 @@ import { LoginDto } from './dtos/login.dto';
 import { Response } from 'express';
 import { PostJoinRes } from './dtos/join-response.dto';
 import { LogoutResponseDto } from './dtos/logout-response.dto';
-import { JwtAuthGuard } from './jwt/jwt.guard';
+import { JwtAuthGuard } from '../common/decorator/auth/jwt/jwt.guard';
 import { EmailVerificationResponseDto } from './dtos/email-verification-response.dto';
 
 @Controller('auth')

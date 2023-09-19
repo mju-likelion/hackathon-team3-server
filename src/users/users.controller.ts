@@ -1,15 +1,6 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Res } from '@nestjs/common';
 import { AuthUser } from '../auth/auth-user.decorator';
-import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
-import { User } from './entities/users.entity';
+import { User, UserRole } from './entities/users.entity';
 import { UsersService } from './users.service';
 import {
   ModifyPasswordReq,
@@ -18,12 +9,13 @@ import {
 import { DeleteAccountRes } from './dtos/delete-account.dto';
 import { ProfileRes } from './dtos/profile.dto';
 import { Response } from 'express';
+import { Auth } from '../common/decorator/auth/auth.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @Auth(UserRole.ANY)
   @Get()
   profile(@AuthUser() user: User): ProfileRes {
     return {
@@ -33,7 +25,7 @@ export class UsersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth(UserRole.ANY)
   @Delete()
   async deleteAccount(
     @AuthUser() user: User,
@@ -42,7 +34,7 @@ export class UsersController {
     return this.usersService.deleteAccount(user, res);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth(UserRole.ANY)
   @Patch('password')
   async modifyPassword(
     @AuthUser() user: User,

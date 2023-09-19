@@ -8,10 +8,22 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { IsEmail, IsString, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsString, Matches } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { Chapter } from 'src/chapters/entities/chapter.entity';
 import { Problem } from '../../problems/entities/problem.entity';
+
+/**
+ * @description
+ * 일반 사용자 - USER
+ * 관리자 - ADMIN
+ * 모든 권한 - ANY
+ */
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  ANY = 'ANY',
+}
 
 @Entity()
 export class User {
@@ -41,6 +53,10 @@ export class User {
   @ManyToMany(() => Problem)
   @JoinTable()
   completedProblems?: Problem[];
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @IsEnum(UserRole)
+  role!: UserRole;
 
   @BeforeInsert()
   @BeforeUpdate()

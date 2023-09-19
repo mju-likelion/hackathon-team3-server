@@ -6,11 +6,9 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthUser } from '../auth/auth-user.decorator';
-import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
-import { User } from 'src/users/entities/users.entity';
+import { User, UserRole } from 'src/users/entities/users.entity';
 import { ChaptersService } from './chapters.service';
 import { GetChapterRes } from './dtos/chapter.dto';
 import { CreateDto } from './dtos/crud/create/create.dto';
@@ -20,12 +18,13 @@ import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
 import { UpdateDto } from './dtos/crud/update/update.dto';
 import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
 import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
+import { Auth } from '../common/decorator/auth/auth.decorator';
 
 @Controller('chapters')
 export class ChaptersController {
   constructor(private readonly chaptersService: ChaptersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @Auth(UserRole.ANY)
   @Get(':id')
   async getChapter(
     @AuthUser() user: User,
@@ -34,21 +33,25 @@ export class ChaptersController {
     return this.chaptersService.getChapter(user, chapterId);
   }
 
+  @Auth(UserRole.ANY)
   @Post()
   async create(@Body() createDto: CreateDto): Promise<CreateResponseDto> {
     return this.chaptersService.create(createDto);
   }
 
+  @Auth(UserRole.ANY)
   @Get('/:id/all')
   async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
     return this.chaptersService.findOne(id);
   }
 
+  @Auth(UserRole.ANY)
   @Get()
   async findAll(): Promise<FindAllResponseDto> {
     return this.chaptersService.findAll();
   }
 
+  @Auth(UserRole.ANY)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,
@@ -57,6 +60,7 @@ export class ChaptersController {
     return this.chaptersService.updateOne(id, updateDto);
   }
 
+  @Auth(UserRole.ANY)
   @Delete(':id')
   async deleteOne(@Param('id') id: string): Promise<DeleteResponseDto> {
     return this.chaptersService.deleteOne(id);

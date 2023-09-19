@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/users.entity';
-import { ONEDAY, Payload } from './jwt/jwt.payload';
+import { ONEDAY, Payload } from '../common/decorator/auth/jwt/jwt.payload';
 import { JoinDto } from './dtos/join.dto';
 import { LoginDto } from './dtos/login.dto';
 import { PostJoinRes } from './dtos/join-response.dto';
