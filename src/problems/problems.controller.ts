@@ -35,25 +35,25 @@ export class ProblemsController {
     return this.problemsService.scoreProblem(user, problemId, submitDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Post()
   async create(@Body() createDto: CreateDto): Promise<CreateResponseDto> {
     return this.problemsService.create(createDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
     return this.problemsService.findOne(id);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get()
   async findAll(): Promise<FindAllResponseDto> {
     return this.problemsService.findAll();
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,
@@ -62,7 +62,7 @@ export class ProblemsController {
     return this.problemsService.updateOne(id, updateDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string): Promise<DeleteResponseDto> {
     return this.problemsService.deleteOne(id);
