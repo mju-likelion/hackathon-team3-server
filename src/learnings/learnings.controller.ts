@@ -44,25 +44,25 @@ export class LearningsController {
     return this.learningsService.getChapters(user, type);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Post()
   async create(@Body() createDto: CreateDto): Promise<CreateResponseDto> {
     return this.learningsService.create(createDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
     return this.learningsService.findOne(id);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get()
   async findAll(): Promise<FindAllResponseDto> {
     return this.learningsService.findAll();
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,
@@ -71,7 +71,7 @@ export class LearningsController {
     return this.learningsService.updateOne(id, updateDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string): Promise<DeleteResponseDto> {
     return this.learningsService.deleteOne(id);

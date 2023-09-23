@@ -33,25 +33,25 @@ export class ChaptersController {
     return this.chaptersService.getChapter(user, chapterId);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Post()
   async create(@Body() createDto: CreateDto): Promise<CreateResponseDto> {
     return this.chaptersService.create(createDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get('/:id/all')
   async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
     return this.chaptersService.findOne(id);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Get()
   async findAll(): Promise<FindAllResponseDto> {
     return this.chaptersService.findAll();
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,
@@ -60,7 +60,7 @@ export class ChaptersController {
     return this.chaptersService.updateOne(id, updateDto);
   }
 
-  @Auth(UserRole.ANY)
+  @Auth(UserRole.ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string): Promise<DeleteResponseDto> {
     return this.chaptersService.deleteOne(id);
