@@ -8,12 +8,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/users.entity';
-import {
-  ModifyPasswordReq,
-  ModifyPasswordRes,
-} from './dtos/modify-password.dto';
-import { DeleteAccountRes } from './dtos/delete-account.dto';
+import { ModifyPasswordReq } from './dtos/modify-password.dto';
 import { Response } from 'express';
+import { ResponseDto } from '../common/dtos/response/response.dto';
 
 @Injectable()
 export class UsersService {
@@ -25,44 +22,33 @@ export class UsersService {
   async modifyPassword(
     user: User,
     { oldPassword, password }: ModifyPasswordReq,
-  ): Promise<ModifyPasswordRes> {
-    try {
-      const userWithPassword = await this.usersRepository.findOneOrFail({
-        where: { id: user.id },
-        select: { id: true, email: true, password: true },
-      });
-      if (password && oldPassword) {
-        if (await userWithPassword?.checkPassword(oldPassword)) {
-          if (await userWithPassword.checkPassword(password)) {
-            throw new BadRequestException('Same password');
-          } else {
-            userWithPassword.password = password;
-          }
-        } else throw new UnauthorizedException('The password is incorrect');
+  ): Promise<ResponseDto> {
+    const userWithPassword = await this.usersRepository.findOneOrFail({
+      where: { id: user.id },
+      select: { id: true, email: true, password: true },
+    });
+    if (password && oldPassword) {
+      if (await userWithPassword?.checkPassword(oldPassword)) {
+        if (await userWithPassword.checkPassword(password)) {
+          throw new BadRequestException('same password.');
+        } else {
+          userWithPassword.password = password;
+        }
+      } else throw new UnauthorizedException('password is incorrect.');
 
-        await this.usersRepository.save(userWithPassword);
-      } else {
-        throw new BadRequestException('Please enter a password');
-      }
-
-      return {
-        statusCode: 200,
-        message: 'Password successfully modified',
-      };
-    } catch (e) {
-      throw e;
+      await this.usersRepository.save(userWithPassword);
+    } else {
+      throw new BadRequestException('password or oldPassword is empty.');
     }
+    return new ResponseDto([{ id: user.id }]);
   }
 
-  async deleteAccount(
-    user: User,
-    @Res() res: Response,
-  ): Promise<DeleteAccountRes> {
+  async deleteAccount(user: User, @Res() res: Response): Promise<ResponseDto> {
     const userInDb = await this.usersRepository.findOne({
       where: { id: user.id },
     });
     if (!userInDb) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('user not found.');
     }
     const result = await this.usersRepository.remove(user);
 
@@ -72,10 +58,7 @@ export class UsersService {
         httpOnly: true,
         secure: true,
       });
-      return {
-        statusCode: 200,
-        message: 'Account successfully deleted',
-      };
+      return new ResponseDto([]);
     }
   }
 }
