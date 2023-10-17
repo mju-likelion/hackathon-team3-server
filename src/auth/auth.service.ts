@@ -14,14 +14,11 @@ import { User } from '../users/entities/users.entity';
 import { ONEDAY, Payload } from '../common/decorator/auth/jwt/jwt.payload';
 import { JoinDto } from './dtos/join.dto';
 import { LoginDto } from './dtos/login.dto';
-import { PostJoinRes } from './dtos/join-response.dto';
-import { PostLoginRes } from './dtos/login-response.dto';
-import { LogoutResponseDto } from './dtos/logout-response.dto';
 import { EmailService } from '../email/email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { v4 as uuidv4 } from 'uuid';
-import { EmailVerificationResponseDto } from './dtos/email-verification-response.dto';
+import { ResponseDto } from '../common/dtos/response/response.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,13 +31,13 @@ export class AuthService {
     private readonly cacheManager: Cache,
   ) {}
 
-  async join(joinDto: JoinDto): Promise<PostJoinRes> {
+  async join(joinDto: JoinDto): Promise<ResponseDto> {
     if (
       await this.usersRepository.findOne({
         where: { email: joinDto.email },
       })
     ) {
-      throw new ConflictException('이미 존재하는 사용자 입니다.');
+      throw new ConflictException('user already exists.');
     }
 
     const userInDto: User = this.usersRepository.create(joinDto);
@@ -51,21 +48,21 @@ export class AuthService {
       '이메일 인증',
       this.emailService.createVerificationEmail(verifyToken, '5'),
     );
-    const postJoinRes: PostJoinRes = new PostJoinRes();
-    postJoinRes.statusCode = 201;
-    postJoinRes.message = 'email successfully sent';
-    return postJoinRes;
+    return new ResponseDto([
+      { nickname: joinDto.nickname, email: joinDto.email },
+    ]);
   }
 
-  async login(loginDto: LoginDto, response: Response) {
+  async login(loginDto: LoginDto, response: Response): Promise<ResponseDto> {
     const userData = await this.usersRepository.findOne({
       where: { email: loginDto.email },
       select: { id: true, email: true, password: true, nickname: true },
     });
-    if (!userData || !(await userData.checkPassword(loginDto.password))) {
-      throw !userData
-        ? new NotFoundException('존재하지 않는 사용자입니다.')
-        : new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+    if (!userData) {
+      throw new NotFoundException('user not found.');
+    }
+    if (!(await userData.checkPassword(loginDto.password))) {
+      throw new UnauthorizedException('password is not correct.');
     }
 
     const payload: Payload = {
@@ -80,40 +77,32 @@ export class AuthService {
       httpOnly: true,
       secure: true,
     });
-    const postLoginRes: PostLoginRes = new PostLoginRes();
-    postLoginRes.statusCode = 200;
-    postLoginRes.message = 'login success';
-    postLoginRes.nickname = userData.nickname;
-
-    return response.json(postLoginRes);
+    return new ResponseDto([
+      { nickname: userData.nickname, email: userData.email },
+    ]);
   }
 
-  logout(@Res() res: Response): LogoutResponseDto {
+  logout(@Res() res: Response): ResponseDto {
     res.clearCookie('jwt', {
       domain: 'surfing-likelion.com',
       httpOnly: true,
       secure: true,
     });
-    const logoutResponseDto: LogoutResponseDto = new LogoutResponseDto();
-    logoutResponseDto.statusCode = 200;
-    logoutResponseDto.message = 'logout success';
-    return logoutResponseDto;
+    return new ResponseDto([]);
   }
 
   async saveUserToRedis(verifyToken: string, userData: User) {
     await this.cacheManager.set(verifyToken, userData, { ttl: 300 });
   }
 
-  async emailVerification(verifyToken: string) {
+  async emailVerification(verifyToken: string): Promise<ResponseDto> {
     const userData = await this.cacheManager.get(verifyToken);
     if (!userData) {
       throw new NotFoundException('verifyToken not found.');
     }
     await this.usersRepository.save(this.usersRepository.create(userData));
-    const emailVerificationResponseDto: EmailVerificationResponseDto =
-      new EmailVerificationResponseDto();
-    emailVerificationResponseDto.statusCode = 201;
-    emailVerificationResponseDto.message = 'user successfully created';
-    return emailVerificationResponseDto;
+    return new ResponseDto([
+      { nickname: userData.nickname, email: userData.email },
+    ]);
   }
 }
