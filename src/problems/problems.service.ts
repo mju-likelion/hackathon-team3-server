@@ -10,17 +10,12 @@ import { User } from 'src/users/entities/users.entity';
 import { Problem, QuestionType } from './entities/problem.entity';
 import { SubmitDto } from './dtos/submit.dto';
 import { OpenaiService } from '../apis/openai/openai.service';
-import { SubmitResponseDto } from './dtos/submit-response.dto';
 import { ScoreProblemResponseDto } from '../apis/openai/dtos/score-problem-response.dto';
 import { OptimizeStringResponseDto } from '../apis/openai/dtos/optimize-string-response.dto';
 import { CreateDto } from './dtos/crud/create/create.dto';
-import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
 import { Chapter } from '../chapters/entities/chapter.entity';
-import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
-import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
 import { UpdateDto } from './dtos/crud/update/update.dto';
-import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
-import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
+import { ResponseDto } from '../common/dtos/response/response.dto';
 
 @Injectable()
 export class ProblemsService {
@@ -38,103 +33,99 @@ export class ProblemsService {
     user: User,
     problemId: string,
     submitDto: SubmitDto,
-  ): Promise<SubmitResponseDto> {
-    const submitResponseDto: SubmitResponseDto = new SubmitResponseDto();
-    submitResponseDto.statusCode = 200;
-    submitResponseDto.message = 'Problem successfully submitted';
+  ): Promise<ResponseDto> {
+    let isCorrect: boolean;
+    let isChapterComplete: boolean;
+    const problem = await this.problemsRepository.findOne({
+      where: { id: problemId },
+      relations: { chapter: true },
+    });
 
-    try {
-      const problem = await this.problemsRepository.findOne({
-        where: { id: problemId },
-        relations: { chapter: true },
-      });
+    if (!problem) {
+      throw new NotFoundException('problem not found.');
+    }
+    console.log('사용자 제출 답', submitDto.answer);
+    console.log('DB에 있는 답', problem.answer);
+    if (problem.type === QuestionType.MCQ) {
+      isCorrect = problem.answer === submitDto.answer;
+    } else if (
+      this.isSubmittedAnswerValid(
+        problem.answer.toLowerCase().split(' '),
+        submitDto.answer.trim(),
+      )
+    ) {
+      isCorrect = true;
+    } else {
+      const optimizeStringResponseDto: OptimizeStringResponseDto =
+        await this.openaiService.optimizeStringSpaces({
+          requestedString: submitDto.answer,
+          temperature: 0.1,
+        });
+      submitDto.answer = optimizeStringResponseDto.optimizedString;
+      const problemAnswerTokens: string[] = problem.answer
+        .toLowerCase()
+        .split(' ');
 
-      if (!problem) {
-        throw new NotFoundException('Problem dose not exist');
-      }
-      console.log('사용자 제출 답', submitDto.answer);
-      console.log('DB에 있는 답', problem.answer);
-      if (problem.type === QuestionType.MCQ) {
-        submitResponseDto.isCorrect = problem.answer === submitDto.answer;
-      } else if (
-        this.isSubmittedAnswerValid(
-          problem.answer.toLowerCase().split(' '),
+      console.log('공백을 처리한 사용자 제출 답', submitDto.answer);
+      console.log('split힌 DB에 있는 답', problemAnswerTokens);
+      if (
+        !this.isSubmittedAnswerValid(
+          problemAnswerTokens,
           submitDto.answer.trim(),
         )
       ) {
-        submitResponseDto.isCorrect = true;
+        isCorrect = false;
       } else {
-        const optimizeStringResponseDto: OptimizeStringResponseDto =
-          await this.openaiService.optimizeStringSpaces({
-            requestedString: submitDto.answer,
-            temperature: 0.1,
-          });
-        submitDto.answer = optimizeStringResponseDto.optimizedString;
-        const problemAnswerTokens: string[] = problem.answer
-          .toLowerCase()
-          .split(' ');
-
-        console.log('공백을 처리한 사용자 제출 답', submitDto.answer);
-        console.log('split힌 DB에 있는 답', problemAnswerTokens);
-        if (
-          !this.isSubmittedAnswerValid(
-            problemAnswerTokens,
-            submitDto.answer.trim(),
-          )
-        ) {
-          submitResponseDto.isCorrect = false;
+        if (submitDto.answer.split(' ').length === problemAnswerTokens.length) {
+          isCorrect = true;
         } else {
-          if (
-            submitDto.answer.split(' ').length === problemAnswerTokens.length
-          ) {
-            submitResponseDto.isCorrect = true;
-          } else {
-            const scoreProblemResponseDto: ScoreProblemResponseDto =
-              await this.openaiService.scoreProblem({
-                originAnswer: problem.answer,
-                submittedAnswer: submitDto.answer,
-                temperature: 0,
-              });
+          const scoreProblemResponseDto: ScoreProblemResponseDto =
+            await this.openaiService.scoreProblem({
+              originAnswer: problem.answer,
+              submittedAnswer: submitDto.answer,
+              temperature: 0,
+            });
 
-            if (!scoreProblemResponseDto) {
-              throw new InternalServerErrorException('OpenAI did not response');
-            }
-
-            submitResponseDto.isCorrect = scoreProblemResponseDto.score >= 78;
-            console.log('점수', scoreProblemResponseDto.score);
+          if (!scoreProblemResponseDto) {
+            throw new InternalServerErrorException('openAi did not response.');
           }
+
+          isCorrect = scoreProblemResponseDto.score >= 78;
+          console.log('점수', scoreProblemResponseDto.score);
         }
       }
-      submitResponseDto.isChapterComplete = false;
-      if (submitResponseDto.isCorrect) {
-        const userInDb = await this.userRepository.findOne({
-          where: { id: user.id },
-          relations: {
-            completedProblems: { chapter: true },
-            completedChapters: true,
-          },
-        });
-
-        const isProblemAlreadyCompleted = userInDb.completedProblems.find(
-          (p) => p.id === problem.id,
-        );
-
-        if (!isProblemAlreadyCompleted) {
-          userInDb.completedProblems.push(problem);
-        }
-        const isChapterComplete =
-          userInDb.completedProblems.length >= 3 && submitDto.currentTab === 3;
-        if (isChapterComplete) {
-          userInDb.completedChapters.push(problem.chapter);
-        }
-        await this.userRepository.save(userInDb);
-        submitResponseDto.isChapterComplete = isChapterComplete;
-      }
-
-      return submitResponseDto;
-    } catch (e) {
-      throw e;
     }
+    isChapterComplete = false;
+    if (isCorrect) {
+      const userInDb = await this.userRepository.findOne({
+        where: { id: user.id },
+        relations: {
+          completedProblems: { chapter: true },
+          completedChapters: true,
+        },
+      });
+
+      const isProblemAlreadyCompleted = userInDb.completedProblems.find(
+        (p) => p.id === problem.id,
+      );
+
+      if (!isProblemAlreadyCompleted) {
+        userInDb.completedProblems.push(problem);
+      }
+      isChapterComplete =
+        userInDb.completedProblems.length >= 3 && submitDto.currentTab === 3;
+      if (isChapterComplete) {
+        userInDb.completedChapters.push(problem.chapter);
+      }
+      await this.userRepository.save(userInDb);
+    }
+
+    return new ResponseDto([
+      {
+        isCorrect: isCorrect,
+        isChapterComplete: isChapterComplete,
+      },
+    ]);
   }
 
   isSubmittedAnswerValid(
@@ -151,18 +142,18 @@ export class ProblemsService {
     return isValuableAnswer;
   }
 
-  async create(createDto: CreateDto): Promise<CreateResponseDto> {
+  async create(createDto: CreateDto): Promise<ResponseDto> {
     if (createDto.type == QuestionType.MCQ) {
       if (!createDto.answerOptions) {
         throw new BadRequestException(
-          'Problem type MCQ must have answerOptions',
+          'problem type MCQ must have answerOptions.',
         );
       } else if (!createDto.answerOptions.includes(',')) {
-        throw new BadRequestException("AnswerOptions must contains ','");
+        throw new BadRequestException("answerOptions must contains ','.");
       }
     } else if (createDto.answerOptions) {
       throw new BadRequestException(
-        "Only MCQ can have property 'answerOptions'",
+        "only MCQ can have property 'answerOptions'.",
       );
     }
 
@@ -172,20 +163,15 @@ export class ProblemsService {
         where: { id: createDto.chapterId },
       });
       if (!chapterInDb) {
-        throw new NotFoundException('Chapter dose not exist');
+        throw new NotFoundException('chapter does not exist.');
       }
       newProblem.chapter = chapterInDb;
     }
     await this.problemsRepository.save(newProblem);
-
-    const createResponseDto: CreateResponseDto = new CreateResponseDto();
-    createResponseDto.statusCode = 201;
-    createResponseDto.message = 'Problem successfully created';
-    createResponseDto.generatedProblemId = newProblem.id;
-    return createResponseDto;
+    return new ResponseDto([{ generatedProblemId: newProblem.id }]);
   }
 
-  async findOne(id: string): Promise<FindOneResponseDto> {
+  async findOne(id: string): Promise<ResponseDto> {
     const problemIdDb = await this.problemsRepository.findOne({
       where: { id },
       relations: {
@@ -193,88 +179,68 @@ export class ProblemsService {
       },
     });
     if (!problemIdDb) {
-      throw new NotFoundException('Problem dose not exist');
+      throw new NotFoundException('problem does not exist.');
     }
-    const findOneResponseDto: FindOneResponseDto = new FindOneResponseDto();
-    findOneResponseDto.statusCode = 200;
-    findOneResponseDto.message = 'Problem successfully found';
-    findOneResponseDto.foundProblem = problemIdDb;
-    return findOneResponseDto;
+    return new ResponseDto([{ problem: problemIdDb }]);
   }
 
-  async findAll(): Promise<FindAllResponseDto> {
+  async findAll(): Promise<ResponseDto> {
     const problemsIdDb = await this.problemsRepository.find({
       relations: {
         chapter: true,
       },
     });
     if (!problemsIdDb) {
-      throw new NotFoundException('Problems dose not exist');
+      throw new NotFoundException('problems does not exist.');
     }
-
-    const findAllResponseDto: FindAllResponseDto = new FindAllResponseDto();
-    findAllResponseDto.statusCode = 200;
-    findAllResponseDto.message = 'Problems successfully found';
-    findAllResponseDto.foundedProblems = problemsIdDb;
-    return findAllResponseDto;
+    return new ResponseDto([{ problems: problemsIdDb }]);
   }
 
-  async updateOne(
-    id: string,
-    updateDto: UpdateDto,
-  ): Promise<UpdateResponseDto> {
+  async updateOne(id: string, updateDto: UpdateDto): Promise<ResponseDto> {
     if (updateDto.type == QuestionType.MCQ) {
       if (!updateDto.answerOptions) {
         throw new BadRequestException(
-          'Problem type MCQ must have answerOptions',
+          'problem type MCQ must have answerOptions.',
         );
       } else if (!updateDto.answerOptions.includes(',')) {
-        throw new BadRequestException("AnswerOptions must contains ','");
+        throw new BadRequestException("answerOptions must contains ','.");
       }
     }
     if (updateDto.type != QuestionType.MCQ && updateDto.answerOptions) {
       throw new BadRequestException(
-        "Only MCQ can have property 'answerOptions'",
+        "only MCQ can have property 'answerOptions'.",
       );
     }
     const problemInDb = await this.problemsRepository.findOne({
       where: { id },
     });
     if (!problemInDb) {
-      throw new NotFoundException('Problem dose not exist');
+      throw new NotFoundException('problem does not exist.');
     }
     if (updateDto.chapterId) {
       const chapterInDb = await this.chaptersRepository.findOne({
         where: { id: updateDto.chapterId },
       });
       if (!chapterInDb) {
-        throw new NotFoundException('Chapter dose not exist');
+        throw new NotFoundException('chapter does not exist.');
       }
       problemInDb.chapter = chapterInDb;
     }
     this.updateProblem(updateDto, problemInDb);
 
     await this.problemsRepository.update(problemInDb.id, problemInDb);
-
-    const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
-    updateResponseDto.statusCode = 200;
-    updateResponseDto.message = 'Problem successfully updated';
-    return updateResponseDto;
+    return new ResponseDto([{ problemId: id }]);
   }
 
-  async deleteOne(id: string): Promise<DeleteResponseDto> {
+  async deleteOne(id: string): Promise<ResponseDto> {
     const problemInDb = await this.problemsRepository.findOne({
       where: { id },
     });
     if (!problemInDb) {
-      throw new NotFoundException('Problem dose not exist');
+      throw new NotFoundException('problem does not exist.');
     }
     await this.problemsRepository.delete(id);
-    const deleteResponseDto: DeleteResponseDto = new DeleteResponseDto();
-    deleteResponseDto.statusCode = 200;
-    deleteResponseDto.message = 'Problem successfully deleted';
-
-    return deleteResponseDto;
+    return new ResponseDto([{ problemId: id }]);
   }
 
   updateProblem(updateDto, problem) {
