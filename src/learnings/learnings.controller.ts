@@ -11,16 +11,10 @@ import {
 import { AuthUser } from '../auth/auth-user.decorator';
 import { User, UserRole } from 'src/users/entities/users.entity';
 import { LearningsService } from './learnings.service';
-import { GetProgressRes } from './dtos/progress.dto';
-import { GetChaptersRes } from './dtos/chapters.dto';
 import { CreateDto } from './dtos/crud/create/create.dto';
-import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
-import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
-import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
 import { UpdateDto } from './dtos/crud/update/update.dto';
-import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
-import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
 import { Auth } from '../common/decorator/auth/auth.decorator';
+import { ResponseDto } from '../common/dtos/response/response.dto';
 
 @Controller('learnings')
 export class LearningsController {
@@ -31,7 +25,7 @@ export class LearningsController {
   async getProgress(
     @AuthUser() user: User,
     @Query('type') type: string,
-  ): Promise<GetProgressRes> {
+  ): Promise<ResponseDto> {
     return this.learningsService.getProgress(user, type);
   }
 
@@ -40,25 +34,25 @@ export class LearningsController {
   async getChapters(
     @AuthUser() user: User,
     @Query('type') type: string,
-  ): Promise<GetChaptersRes> {
+  ): Promise<ResponseDto> {
     return this.learningsService.getChapters(user, type);
   }
 
   @Auth(UserRole.ADMIN)
   @Post()
-  async create(@Body() createDto: CreateDto): Promise<CreateResponseDto> {
+  async create(@Body() createDto: CreateDto): Promise<ResponseDto> {
     return this.learningsService.create(createDto);
   }
 
   @Auth(UserRole.ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<FindOneResponseDto> {
+  async findOne(@Param('id') id: string): Promise<ResponseDto> {
     return this.learningsService.findOne(id);
   }
 
   @Auth(UserRole.ADMIN)
   @Get()
-  async findAll(): Promise<FindAllResponseDto> {
+  async findAll(): Promise<ResponseDto> {
     return this.learningsService.findAll();
   }
 
@@ -67,13 +61,13 @@ export class LearningsController {
   async updateOne(
     @Param('id') id: string,
     @Body() updateDto: UpdateDto,
-  ): Promise<UpdateResponseDto> {
+  ): Promise<ResponseDto> {
     return this.learningsService.updateOne(id, updateDto);
   }
 
   @Auth(UserRole.ADMIN)
   @Delete(':id')
-  async deleteOne(@Param('id') id: string): Promise<DeleteResponseDto> {
+  async deleteOne(@Param('id') id: string): Promise<ResponseDto> {
     return this.learningsService.deleteOne(id);
   }
 }

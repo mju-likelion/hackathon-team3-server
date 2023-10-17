@@ -3,15 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/users.entity';
 import { Learning } from './entities/learning.entity';
-import { GetProgressRes } from './dtos/progress.dto';
-import { GetChaptersRes } from './dtos/chapters.dto';
 import { CreateDto } from './dtos/crud/create/create.dto';
-import { CreateResponseDto } from './dtos/crud/create/create-response.dto';
-import { FindOneResponseDto } from './dtos/crud/read/find-one-response.dto';
-import { FindAllResponseDto } from './dtos/crud/read/find-all-response.dto';
 import { UpdateDto } from './dtos/crud/update/update.dto';
-import { UpdateResponseDto } from './dtos/crud/update/update-response.dto';
-import { DeleteResponseDto } from './dtos/crud/delete/delete-response.dto';
+import { ResponseDto } from '../common/dtos/response/response.dto';
 
 @Injectable()
 export class LearningsService {
@@ -22,120 +16,106 @@ export class LearningsService {
     private learningsRepository: Repository<Learning>,
   ) {}
 
-  async getProgress(user: User, type: string): Promise<GetProgressRes> {
-    try {
-      const userInDb = await this.usersRepository.findOne({
-        where: { id: user.id },
-        relations: {
-          completedChapters: {
-            learning: true,
-          },
+  async getProgress(user: User, type: string): Promise<ResponseDto> {
+    const userInDb: User = await this.usersRepository.findOne({
+      where: { id: user.id },
+      relations: {
+        completedChapters: {
+          learning: true,
         },
-      });
-      if (!userInDb) {
-        throw new NotFoundException('User not found');
-      }
+      },
+    });
+    if (!userInDb) {
+      throw new NotFoundException('user not found.');
+    }
 
-      // 해당 타입 내 전체 챕터 수
-      const learning = await this.learningsRepository.findOne({
-        where: {
-          type: +type,
-        },
-        relations: {
-          chapters: true,
-        },
-      });
-      if (!learning)
-        throw new NotFoundException('Learning not found within the type');
+    // 해당 타입 내 전체 챕터 수
+    const learning = await this.learningsRepository.findOne({
+      where: {
+        type: +type,
+      },
+      relations: {
+        chapters: true,
+      },
+    });
+    if (!learning) {
+      throw new NotFoundException('learning not found within the type.');
+    }
+    if (learning.chapters.length === 0)
+      throw new NotFoundException('chapters not found within the learning');
 
-      if (learning.chapters.length === 0)
-        throw new NotFoundException('Chapters not found within the learning');
+    const userCompletedChapters = userInDb.completedChapters.filter(
+      (chapter) => {
+        return chapter.learning.type === +type;
+      },
+    );
 
-      const userCompletedChapters = userInDb.completedChapters.filter(
-        (chapter) => {
-          return chapter.learning.type === +type;
+    // 해당 타입 내 완료한 챕터 수
+    const progress =
+      userCompletedChapters.length === 0
+        ? 0
+        : (userCompletedChapters.length / learning.chapters.length) * 100;
+
+    return new ResponseDto([{ progress: progress }]);
+  }
+
+  async getChapters(user: User, type: string): Promise<ResponseDto> {
+    const userInDb = await this.usersRepository.findOne({
+      where: { id: user.id },
+      relations: {
+        completedChapters: true,
+      },
+    });
+    if (!userInDb) {
+      throw new NotFoundException('user not found.');
+    }
+
+    const learning = await this.learningsRepository.findOne({
+      where: {
+        type: +type,
+      },
+      relations: {
+        chapters: true,
+      },
+      order: {
+        chapters: {
+          order: 'ASC',
         },
+      },
+    });
+    if (!learning)
+      throw new NotFoundException('learning not found within the type.');
+    if (learning.chapters.length === 0)
+      throw new NotFoundException('chapters not found within the learning.');
+
+    // 해당 챕터 완료 여부 추가
+    learning.chapters.forEach((chapter) => {
+      chapter['isCompleted'] = userInDb.completedChapters.some(
+        (completedChapter) => completedChapter.id === chapter.id,
       );
+    });
 
-      // 해당 타입 내 완료한 챕터 수
-      const progress =
-        userCompletedChapters.length === 0
-          ? 0
-          : (userCompletedChapters.length / learning.chapters.length) * 100;
-
-      return {
-        statusCode: 200,
-        message: 'Progress successfully retrieved',
-        progress,
-      };
-    } catch (e) {
-      throw e;
+    // 진도율 추가
+    const { progress } = await (await this.getProgress(user, type)).data;
+    if (progress == null) {
+      throw new NotFoundException('progress not found.');
     }
-  }
-
-  async getChapters(user: User, type: string): Promise<GetChaptersRes> {
-    try {
-      const userInDb = await this.usersRepository.findOne({
-        where: { id: user.id },
-        relations: {
-          completedChapters: true,
-        },
-      });
-      if (!userInDb) {
-        throw new NotFoundException('User not found');
-      }
-
-      const learning = await this.learningsRepository.findOne({
-        where: {
-          type: +type,
-        },
-        relations: {
-          chapters: true,
-        },
-        order: {
-          chapters: {
-            order: 'ASC',
-          },
-        },
-      });
-      if (!learning) throw new NotFoundException('Learning not found ');
-      if (learning.chapters.length === 0)
-        throw new NotFoundException('Chapters not found within the learning');
-
-      // 해당 챕터 완료 여부 추가
-      learning.chapters.forEach((chapter) => {
-        const isCompleted = userInDb.completedChapters.some(
-          (completedChapter) => completedChapter.id === chapter.id,
-        );
-        chapter['isCompleted'] = isCompleted;
-      });
-
-      // 진도율 추가
-      const { progress } = await this.getProgress(user, type);
-
-      return {
-        statusCode: 200,
-        message: 'Chapters successfully retrieved',
+    return new ResponseDto([
+      {
         chapters: learning.chapters,
-        progress,
-      };
-    } catch (e) {
-      throw e;
-    }
+        progress: progress,
+      },
+    ]);
   }
 
-  async create(createDto: CreateDto): Promise<CreateResponseDto> {
+  async create(createDto: CreateDto): Promise<ResponseDto> {
     const newLearning = this.learningsRepository.create(createDto);
     await this.learningsRepository.save(newLearning);
 
-    const createResponseDto: CreateResponseDto = new CreateResponseDto();
-    createResponseDto.statusCode = 201;
-    createResponseDto.message = 'Learning successfully created';
-    createResponseDto.generatedLearningId = newLearning.id;
-    return createResponseDto;
+    return new ResponseDto([{ generatedLearningId: newLearning.id }]);
   }
 
-  async findOne(id: string): Promise<FindOneResponseDto> {
+  async findOne(id: string): Promise<ResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
       where: { id },
       relations: {
@@ -143,66 +123,47 @@ export class LearningsService {
       },
     });
     if (!learningInDb) {
-      throw new NotFoundException('Learning dose not exist');
+      throw new NotFoundException('learning does not exist.');
     }
-    const findOneResponseDto: FindOneResponseDto = new FindOneResponseDto();
-    findOneResponseDto.statusCode = 200;
-    findOneResponseDto.message = 'Learning successfully found';
-    findOneResponseDto.foundLearning = learningInDb;
-    return findOneResponseDto;
+
+    return new ResponseDto([{ learning: learningInDb }]);
   }
 
-  async findAll(): Promise<FindAllResponseDto> {
+  async findAll(): Promise<ResponseDto> {
     const learningsInDb = await this.learningsRepository.find({
       relations: {
         chapters: true,
       },
     });
     if (!learningsInDb) {
-      throw new NotFoundException('Learnings dose not exist');
+      throw new NotFoundException('learnings does not exist.');
     }
-    const findAllResponseDto: FindAllResponseDto = new FindAllResponseDto();
-    findAllResponseDto.statusCode = 200;
-    findAllResponseDto.message = 'Learnings successfully found';
-    findAllResponseDto.foundLearnings = learningsInDb;
-    return findAllResponseDto;
+    return new ResponseDto([{ learnings: learningsInDb }]);
   }
 
-  async updateOne(
-    id: string,
-    updateDto: UpdateDto,
-  ): Promise<UpdateResponseDto> {
+  async updateOne(id: string, updateDto: UpdateDto): Promise<ResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
       where: { id },
     });
     if (!learningInDb) {
-      throw new NotFoundException('Learning dose not exist');
+      throw new NotFoundException('learning does not exist.');
     }
 
     if (updateDto.type) {
       learningInDb.type = updateDto.type;
     }
-
     await this.learningsRepository.update(learningInDb.id, learningInDb);
-
-    const updateResponseDto: UpdateResponseDto = new UpdateResponseDto();
-    updateResponseDto.statusCode = 200;
-    updateResponseDto.message = 'Learning successfully updated';
-    return updateResponseDto;
+    return new ResponseDto([{ learningId: id }]);
   }
 
-  async deleteOne(id: string): Promise<DeleteResponseDto> {
+  async deleteOne(id: string): Promise<ResponseDto> {
     const learningInDb = await this.learningsRepository.findOne({
       where: { id },
     });
     if (!learningInDb) {
-      throw new NotFoundException('Learning dose not exist');
+      throw new NotFoundException('learning does not exist.');
     }
     await this.learningsRepository.delete(id);
-    const deleteResponseDto: DeleteResponseDto = new DeleteResponseDto();
-    deleteResponseDto.statusCode = 200;
-    deleteResponseDto.message = 'Learning successfully deleted';
-
-    return deleteResponseDto;
+    return new ResponseDto([{ learningId: id }]);
   }
 }
