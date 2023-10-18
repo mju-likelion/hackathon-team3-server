@@ -24,6 +24,7 @@ export class AuthController {
   }
 
   @Post('/login')
+  @HttpCode(200)
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -32,6 +33,7 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @Post('/logout')
+  @HttpCode(200)
   logout(@Res({ passthrough: true }) res: Response): ResponseDto {
     return this.authService.logout(res);
   }
