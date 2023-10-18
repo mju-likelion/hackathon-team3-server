@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -22,6 +23,7 @@ export class ProblemsController {
 
   @Auth(UserRole.ANY)
   @Post(':id/submit')
+  @HttpCode(200)
   async submitProblem(
     @AuthUser() user: User,
     @Param('id') problemId,
